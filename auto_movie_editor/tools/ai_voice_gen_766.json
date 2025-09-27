@@ -1,0 +1,960 @@
+{
+  "text": " Hey tech enthusiasts, buckle up we're diving into 2025's wildest EV innovations. First up, solid state batteries. These bad boys offer double the range of today's EVs in charge in just 10 minutes. Game changer next, wireless charging lanes. Imagine your car juicing up while you drive no more plugging in. Third, AI is taking the wheel. New autonomous systems learn your habits and optimize routes in real time. Fourth, solar-bodied EVs. Panels integrated into roofs and hoods add up to 40 miles of free daily range. Finally, sustainability goes next level with fully recyclable interiors made from algae and mushroom leather. The future, it's electric, effortless and eco-friendly. Hit subscribe to stay charged on what's next.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.2,
+      "end": 1.76,
+      "text": "Hey tech enthusiasts, buckle up",
+      "words": [
+        {
+          "text": "Hey",
+          "start": 0.2,
+          "end": 0.34,
+          "confidence": 0.809
+        },
+        {
+          "text": "tech",
+          "start": 0.34,
+          "end": 0.54,
+          "confidence": 0.734
+        },
+        {
+          "text": "enthusiasts,",
+          "start": 0.54,
+          "end": 1.04,
+          "confidence": 0.976
+        },
+        {
+          "text": "buckle",
+          "start": 1.38,
+          "end": 1.56,
+          "confidence": 0.905
+        },
+        {
+          "text": "up",
+          "start": 1.56,
+          "end": 1.76,
+          "confidence": 0.992
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 1.76,
+      "end": 3.6,
+      "text": "we're diving into 2025's wildest",
+      "words": [
+        {
+          "text": "we're",
+          "start": 1.76,
+          "end": 1.92,
+          "confidence": 0.764
+        },
+        {
+          "text": "diving",
+          "start": 1.92,
+          "end": 2.14,
+          "confidence": 0.989
+        },
+        {
+          "text": "into",
+          "start": 2.14,
+          "end": 2.38,
+          "confidence": 0.651
+        },
+        {
+          "text": "2025's",
+          "start": 2.38,
+          "end": 3.22,
+          "confidence": 0.894
+        },
+        {
+          "text": "wildest",
+          "start": 3.22,
+          "end": 3.6,
+          "confidence": 0.879
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 3.6,
+      "end": 4.38,
+      "text": "EV innovations.",
+      "words": [
+        {
+          "text": "EV",
+          "start": 3.6,
+          "end": 3.82,
+          "confidence": 0.975
+        },
+        {
+          "text": "innovations.",
+          "start": 3.82,
+          "end": 4.38,
+          "confidence": 0.957
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "seek": 0,
+      "start": 4.92,
+      "end": 6.26,
+      "text": "First up, solid state batteries.",
+      "words": [
+        {
+          "text": "First",
+          "start": 4.92,
+          "end": 5.06,
+          "confidence": 0.988
+        },
+        {
+          "text": "up,",
+          "start": 5.06,
+          "end": 5.28,
+          "confidence": 0.99
+        },
+        {
+          "text": "solid",
+          "start": 5.3,
+          "end": 5.56,
+          "confidence": 0.826
+        },
+        {
+          "text": "state",
+          "start": 5.56,
+          "end": 5.8,
+          "confidence": 0.578
+        },
+        {
+          "text": "batteries.",
+          "start": 5.8,
+          "end": 6.26,
+          "confidence": 0.997
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "seek": 0,
+      "start": 6.52,
+      "end": 7.8,
+      "text": "These bad boys offer double",
+      "words": [
+        {
+          "text": "These",
+          "start": 6.52,
+          "end": 6.76,
+          "confidence": 0.851
+        },
+        {
+          "text": "bad",
+          "start": 6.76,
+          "end": 7.02,
+          "confidence": 0.975
+        },
+        {
+          "text": "boys",
+          "start": 7.02,
+          "end": 7.26,
+          "confidence": 0.987
+        },
+        {
+          "text": "offer",
+          "start": 7.26,
+          "end": 7.54,
+          "confidence": 0.978
+        },
+        {
+          "text": "double",
+          "start": 7.54,
+          "end": 7.8,
+          "confidence": 0.993
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "seek": 0,
+      "start": 7.8,
+      "end": 9.04,
+      "text": "the range of today's EVs",
+      "words": [
+        {
+          "text": "the",
+          "start": 7.8,
+          "end": 7.94,
+          "confidence": 0.986
+        },
+        {
+          "text": "range",
+          "start": 7.94,
+          "end": 8.16,
+          "confidence": 0.976
+        },
+        {
+          "text": "of",
+          "start": 8.16,
+          "end": 8.32,
+          "confidence": 0.905
+        },
+        {
+          "text": "today's",
+          "start": 8.32,
+          "end": 8.68,
+          "confidence": 0.946
+        },
+        {
+          "text": "EVs",
+          "start": 8.68,
+          "end": 9.04,
+          "confidence": 0.93
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "seek": 0,
+      "start": 9.04,
+      "end": 9.37,
+      "text": "in charge",
+      "words": [
+        {
+          "text": "in",
+          "start": 9.04,
+          "end": 9.16,
+          "confidence": 0.427
+        },
+        {
+          "text": "charge",
+          "start": 9.16,
+          "end": 9.37,
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "seek": 0,
+      "start": 9.37,
+      "end": 10.66,
+      "text": "in just 10 minutes. Game",
+      "words": [
+        {
+          "text": "in",
+          "start": 9.37,
+          "end": 9.58,
+          "confidence": 0.999
+        },
+        {
+          "text": "just",
+          "start": 9.58,
+          "end": 9.7,
+          "confidence": 0.997
+        },
+        {
+          "text": "10",
+          "start": 9.7,
+          "end": 9.9,
+          "confidence": 0.878
+        },
+        {
+          "text": "minutes.",
+          "start": 9.9,
+          "end": 10.16,
+          "confidence": 0.984
+        },
+        {
+          "text": "Game",
+          "start": 10.38,
+          "end": 10.66,
+          "confidence": 0.989
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "seek": 0,
+      "start": 10.66,
+      "end": 12.44,
+      "text": "changer next, wireless charging lanes.",
+      "words": [
+        {
+          "text": "changer",
+          "start": 10.66,
+          "end": 10.92,
+          "confidence": 0.881
+        },
+        {
+          "text": "next,",
+          "start": 10.92,
+          "end": 11.24,
+          "confidence": 0.967
+        },
+        {
+          "text": "wireless",
+          "start": 11.42,
+          "end": 11.68,
+          "confidence": 0.986
+        },
+        {
+          "text": "charging",
+          "start": 11.68,
+          "end": 12.08,
+          "confidence": 0.995
+        },
+        {
+          "text": "lanes.",
+          "start": 12.08,
+          "end": 12.44,
+          "confidence": 0.995
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "seek": 0,
+      "start": 12.6,
+      "end": 13.7,
+      "text": "Imagine your car juicing up",
+      "words": [
+        {
+          "text": "Imagine",
+          "start": 12.6,
+          "end": 12.82,
+          "confidence": 0.984
+        },
+        {
+          "text": "your",
+          "start": 12.82,
+          "end": 13.02,
+          "confidence": 0.986
+        },
+        {
+          "text": "car",
+          "start": 13.02,
+          "end": 13.24,
+          "confidence": 0.996
+        },
+        {
+          "text": "juicing",
+          "start": 13.24,
+          "end": 13.54,
+          "confidence": 0.97
+        },
+        {
+          "text": "up",
+          "start": 13.54,
+          "end": 13.7,
+          "confidence": 0.992
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "seek": 0,
+      "start": 13.7,
+      "end": 13.86,
+      "text": "while",
+      "words": [
+        {
+          "text": "while",
+          "start": 13.7,
+          "end": 13.86,
+          "confidence": 0.831
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "seek": 0,
+      "start": 13.86,
+      "end": 14.92,
+      "text": "you drive no more plugging",
+      "words": [
+        {
+          "text": "you",
+          "start": 13.86,
+          "end": 14.06,
+          "confidence": 0.999
+        },
+        {
+          "text": "drive",
+          "start": 14.06,
+          "end": 14.3,
+          "confidence": 0.997
+        },
+        {
+          "text": "no",
+          "start": 14.3,
+          "end": 14.52,
+          "confidence": 0.505
+        },
+        {
+          "text": "more",
+          "start": 14.52,
+          "end": 14.68,
+          "confidence": 0.999
+        },
+        {
+          "text": "plugging",
+          "start": 14.68,
+          "end": 14.92,
+          "confidence": 0.988
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "seek": 0,
+      "start": 14.92,
+      "end": 16.36,
+      "text": "in. Third, AI is taking",
+      "words": [
+        {
+          "text": "in.",
+          "start": 14.92,
+          "end": 15.18,
+          "confidence": 0.976
+        },
+        {
+          "text": "Third,",
+          "start": 15.46,
+          "end": 15.64,
+          "confidence": 0.991
+        },
+        {
+          "text": "AI",
+          "start": 15.8,
+          "end": 15.96,
+          "confidence": 0.815
+        },
+        {
+          "text": "is",
+          "start": 15.96,
+          "end": 16.18,
+          "confidence": 0.9
+        },
+        {
+          "text": "taking",
+          "start": 16.18,
+          "end": 16.36,
+          "confidence": 0.998
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "seek": 0,
+      "start": 16.36,
+      "end": 17.84,
+      "text": "the wheel. New autonomous systems",
+      "words": [
+        {
+          "text": "the",
+          "start": 16.36,
+          "end": 16.52,
+          "confidence": 0.998
+        },
+        {
+          "text": "wheel.",
+          "start": 16.52,
+          "end": 16.68,
+          "confidence": 0.998
+        },
+        {
+          "text": "New",
+          "start": 16.9,
+          "end": 17.04,
+          "confidence": 0.968
+        },
+        {
+          "text": "autonomous",
+          "start": 17.04,
+          "end": 17.46,
+          "confidence": 0.976
+        },
+        {
+          "text": "systems",
+          "start": 17.46,
+          "end": 17.84,
+          "confidence": 0.971
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "seek": 0,
+      "start": 17.84,
+      "end": 18.52,
+      "text": "learn your habits",
+      "words": [
+        {
+          "text": "learn",
+          "start": 17.84,
+          "end": 18.12,
+          "confidence": 0.799
+        },
+        {
+          "text": "your",
+          "start": 18.12,
+          "end": 18.28,
+          "confidence": 0.572
+        },
+        {
+          "text": "habits",
+          "start": 18.28,
+          "end": 18.52,
+          "confidence": 0.575
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "seek": 0,
+      "start": 18.52,
+      "end": 19.72,
+      "text": "and optimize routes in real",
+      "words": [
+        {
+          "text": "and",
+          "start": 18.52,
+          "end": 18.74,
+          "confidence": 0.997
+        },
+        {
+          "text": "optimize",
+          "start": 18.74,
+          "end": 19.02,
+          "confidence": 0.959
+        },
+        {
+          "text": "routes",
+          "start": 19.02,
+          "end": 19.36,
+          "confidence": 0.873
+        },
+        {
+          "text": "in",
+          "start": 19.36,
+          "end": 19.54,
+          "confidence": 0.998
+        },
+        {
+          "text": "real",
+          "start": 19.54,
+          "end": 19.72,
+          "confidence": 0.999
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "seek": 0,
+      "start": 19.72,
+      "end": 22.04,
+      "text": "time. Fourth, solar-bodied EVs.",
+      "words": [
+        {
+          "text": "time.",
+          "start": 19.72,
+          "end": 20.04,
+          "confidence": 0.84
+        },
+        {
+          "text": "Fourth,",
+          "start": 20.3,
+          "end": 20.72,
+          "confidence": 0.969
+        },
+        {
+          "text": "solar-bodied",
+          "start": 20.98,
+          "end": 21.52,
+          "confidence": 0.861
+        },
+        {
+          "text": "EVs.",
+          "start": 21.52,
+          "end": 22.04,
+          "confidence": 0.981
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "seek": 0,
+      "start": 23.04,
+      "end": 24.72,
+      "text": "Panels integrated into roofs and",
+      "words": [
+        {
+          "text": "Panels",
+          "start": 23.04,
+          "end": 23.34,
+          "confidence": 0.954
+        },
+        {
+          "text": "integrated",
+          "start": 23.34,
+          "end": 23.8,
+          "confidence": 0.991
+        },
+        {
+          "text": "into",
+          "start": 23.8,
+          "end": 24.12,
+          "confidence": 0.994
+        },
+        {
+          "text": "roofs",
+          "start": 24.12,
+          "end": 24.42,
+          "confidence": 0.976
+        },
+        {
+          "text": "and",
+          "start": 24.42,
+          "end": 24.72,
+          "confidence": 0.997
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "seek": 0,
+      "start": 24.72,
+      "end": 25.9,
+      "text": "hoods add up to 40",
+      "words": [
+        {
+          "text": "hoods",
+          "start": 24.72,
+          "end": 25.08,
+          "confidence": 0.996
+        },
+        {
+          "text": "add",
+          "start": 25.08,
+          "end": 25.3,
+          "confidence": 0.976
+        },
+        {
+          "text": "up",
+          "start": 25.3,
+          "end": 25.48,
+          "confidence": 0.995
+        },
+        {
+          "text": "to",
+          "start": 25.48,
+          "end": 25.62,
+          "confidence": 0.997
+        },
+        {
+          "text": "40",
+          "start": 25.62,
+          "end": 25.9,
+          "confidence": 0.994
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "seek": 0,
+      "start": 25.9,
+      "end": 27.6,
+      "text": "miles of free daily range.",
+      "words": [
+        {
+          "text": "miles",
+          "start": 25.9,
+          "end": 26.22,
+          "confidence": 0.974
+        },
+        {
+          "text": "of",
+          "start": 26.22,
+          "end": 26.5,
+          "confidence": 0.989
+        },
+        {
+          "text": "free",
+          "start": 26.5,
+          "end": 26.74,
+          "confidence": 0.99
+        },
+        {
+          "text": "daily",
+          "start": 26.74,
+          "end": 27.1,
+          "confidence": 0.856
+        },
+        {
+          "text": "range.",
+          "start": 27.1,
+          "end": 27.6,
+          "confidence": 0.979
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "seek": 0,
+      "start": 27.84,
+      "end": 28.38,
+      "text": "Finally,",
+      "words": [
+        {
+          "text": "Finally,",
+          "start": 27.84,
+          "end": 28.38,
+          "confidence": 0.669
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "seek": 2856,
+      "start": 29.26,
+      "end": 30.64,
+      "text": "sustainability goes next level with",
+      "words": [
+        {
+          "text": "sustainability",
+          "start": 29.26,
+          "end": 29.28,
+          "confidence": 0.985
+        },
+        {
+          "text": "goes",
+          "start": 29.28,
+          "end": 29.74,
+          "confidence": 0.998
+        },
+        {
+          "text": "next",
+          "start": 29.74,
+          "end": 30.04,
+          "confidence": 0.998
+        },
+        {
+          "text": "level",
+          "start": 30.04,
+          "end": 30.4,
+          "confidence": 0.981
+        },
+        {
+          "text": "with",
+          "start": 30.4,
+          "end": 30.64,
+          "confidence": 0.973
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "seek": 2856,
+      "start": 30.64,
+      "end": 32.6,
+      "text": "fully recyclable interiors made from",
+      "words": [
+        {
+          "text": "fully",
+          "start": 30.64,
+          "end": 30.92,
+          "confidence": 0.996
+        },
+        {
+          "text": "recyclable",
+          "start": 30.92,
+          "end": 31.58,
+          "confidence": 0.984
+        },
+        {
+          "text": "interiors",
+          "start": 31.58,
+          "end": 32.18,
+          "confidence": 0.995
+        },
+        {
+          "text": "made",
+          "start": 32.18,
+          "end": 32.42,
+          "confidence": 0.948
+        },
+        {
+          "text": "from",
+          "start": 32.42,
+          "end": 32.6,
+          "confidence": 0.989
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "seek": 2856,
+      "start": 32.6,
+      "end": 33.48,
+      "text": "algae and mushroom",
+      "words": [
+        {
+          "text": "algae",
+          "start": 32.6,
+          "end": 32.96,
+          "confidence": 0.996
+        },
+        {
+          "text": "and",
+          "start": 32.96,
+          "end": 33.18,
+          "confidence": 0.961
+        },
+        {
+          "text": "mushroom",
+          "start": 33.18,
+          "end": 33.48,
+          "confidence": 0.846
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "seek": 2856,
+      "start": 33.6,
+      "end": 35.62,
+      "text": "leather. The future, it's electric,",
+      "words": [
+        {
+          "text": "leather.",
+          "start": 33.6,
+          "end": 33.88,
+          "confidence": 0.997
+        },
+        {
+          "text": "The",
+          "start": 34.12,
+          "end": 34.34,
+          "confidence": 0.974
+        },
+        {
+          "text": "future,",
+          "start": 34.34,
+          "end": 34.64,
+          "confidence": 0.997
+        },
+        {
+          "text": "it's",
+          "start": 35.02,
+          "end": 35.2,
+          "confidence": 0.962
+        },
+        {
+          "text": "electric,",
+          "start": 35.2,
+          "end": 35.62,
+          "confidence": 0.989
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "seek": 2856,
+      "start": 35.76,
+      "end": 37.86,
+      "text": "effortless and eco-friendly. Hit subscribe",
+      "words": [
+        {
+          "text": "effortless",
+          "start": 35.76,
+          "end": 36.24,
+          "confidence": 0.998
+        },
+        {
+          "text": "and",
+          "start": 36.24,
+          "end": 36.44,
+          "confidence": 0.567
+        },
+        {
+          "text": "eco-friendly.",
+          "start": 36.44,
+          "end": 37.06,
+          "confidence": 0.97
+        },
+        {
+          "text": "Hit",
+          "start": 37.3,
+          "end": 37.52,
+          "confidence": 0.934
+        },
+        {
+          "text": "subscribe",
+          "start": 37.52,
+          "end": 37.86,
+          "confidence": 0.954
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "seek": 2856,
+      "start": 37.86,
+      "end": 38.86,
+      "text": "to stay charged on",
+      "words": [
+        {
+          "text": "to",
+          "start": 37.86,
+          "end": 38.2,
+          "confidence": 0.996
+        },
+        {
+          "text": "stay",
+          "start": 38.2,
+          "end": 38.42,
+          "confidence": 0.998
+        },
+        {
+          "text": "charged",
+          "start": 38.42,
+          "end": 38.82,
+          "confidence": 0.986
+        },
+        {
+          "text": "on",
+          "start": 38.82,
+          "end": 38.86,
+          "confidence": 0.944
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "seek": 2856,
+      "start": 38.86,
+      "end": 39.64,
+      "text": "what's next.",
+      "words": [
+        {
+          "text": "what's",
+          "start": 38.86,
+          "end": 39.32,
+          "confidence": 0.971
+        },
+        {
+          "text": "next.",
+          "start": 39.32,
+          "end": 39.64,
+          "confidence": 0.999
+        }
+      ]
+    }
+  ],
+  "language": "en"
+}

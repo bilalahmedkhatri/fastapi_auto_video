@@ -1,0 +1,912 @@
+{
+  "text": " Welcome back to Tech Pulse. This week's clean energy breakthroughs are lit. At number 5, MIT researchers unveiled AI-powered geothermal systems that double energy output using existing wells. Game changer. Number 4, Norway deployed the world's first floating offshore wind farm with typhoon-resistant turbines, boosting output by 40%. Boom. Number 3, Toyota announced solid-state EV batteries charging in 10 minutes with 800 mile range. Yes, please. Number 2, Australian scientists cracked low-cost hydrogen storage using ammonia-based fuel cells. Clean fuel just got cheaper. In the top spot, perovskite solar cells hit 32% efficiency in real-world tests shattering silicon limits. The future is bright, people. Smash that subscribe button for more tech revolutions.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.16,
+      "end": 1.42,
+      "text": "Welcome back to Tech Pulse.",
+      "words": [
+        {
+          "text": "Welcome",
+          "start": 0.16,
+          "end": 0.4,
+          "confidence": 0.95
+        },
+        {
+          "text": "back",
+          "start": 0.4,
+          "end": 0.68,
+          "confidence": 0.943
+        },
+        {
+          "text": "to",
+          "start": 0.68,
+          "end": 0.86,
+          "confidence": 0.993
+        },
+        {
+          "text": "Tech",
+          "start": 0.86,
+          "end": 1.06,
+          "confidence": 0.689
+        },
+        {
+          "text": "Pulse.",
+          "start": 1.06,
+          "end": 1.42,
+          "confidence": 0.902
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 1.68,
+      "end": 3.12,
+      "text": "This week's clean energy breakthroughs",
+      "words": [
+        {
+          "text": "This",
+          "start": 1.68,
+          "end": 1.84,
+          "confidence": 0.579
+        },
+        {
+          "text": "week's",
+          "start": 1.84,
+          "end": 2.14,
+          "confidence": 0.994
+        },
+        {
+          "text": "clean",
+          "start": 2.14,
+          "end": 2.32,
+          "confidence": 0.845
+        },
+        {
+          "text": "energy",
+          "start": 2.32,
+          "end": 2.56,
+          "confidence": 0.966
+        },
+        {
+          "text": "breakthroughs",
+          "start": 2.56,
+          "end": 3.12,
+          "confidence": 0.991
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 3.12,
+      "end": 3.38,
+      "text": "are lit.",
+      "words": [
+        {
+          "text": "are",
+          "start": 3.12,
+          "end": 3.2,
+          "confidence": 0.989
+        },
+        {
+          "text": "lit.",
+          "start": 3.2,
+          "end": 3.38,
+          "confidence": 0.987
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "seek": 0,
+      "start": 3.7,
+      "end": 5.04,
+      "text": "At number 5, MIT researchers",
+      "words": [
+        {
+          "text": "At",
+          "start": 3.7,
+          "end": 3.8,
+          "confidence": 0.53
+        },
+        {
+          "text": "number",
+          "start": 3.8,
+          "end": 3.92,
+          "confidence": 0.678
+        },
+        {
+          "text": "5,",
+          "start": 3.92,
+          "end": 4.2,
+          "confidence": 0.616
+        },
+        {
+          "text": "MIT",
+          "start": 4.32,
+          "end": 4.62,
+          "confidence": 0.981
+        },
+        {
+          "text": "researchers",
+          "start": 4.62,
+          "end": 5.04,
+          "confidence": 0.979
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "seek": 0,
+      "start": 5.04,
+      "end": 7.2,
+      "text": "unveiled AI-powered geothermal systems that",
+      "words": [
+        {
+          "text": "unveiled",
+          "start": 5.04,
+          "end": 5.46,
+          "confidence": 0.985
+        },
+        {
+          "text": "AI-powered",
+          "start": 5.46,
+          "end": 6.08,
+          "confidence": 0.623
+        },
+        {
+          "text": "geothermal",
+          "start": 6.08,
+          "end": 6.56,
+          "confidence": 0.943
+        },
+        {
+          "text": "systems",
+          "start": 6.56,
+          "end": 6.98,
+          "confidence": 0.938
+        },
+        {
+          "text": "that",
+          "start": 6.98,
+          "end": 7.2,
+          "confidence": 0.775
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "seek": 0,
+      "start": 7.2,
+      "end": 8.06,
+      "text": "double energy output",
+      "words": [
+        {
+          "text": "double",
+          "start": 7.2,
+          "end": 7.44,
+          "confidence": 0.912
+        },
+        {
+          "text": "energy",
+          "start": 7.44,
+          "end": 7.72,
+          "confidence": 0.765
+        },
+        {
+          "text": "output",
+          "start": 7.72,
+          "end": 8.06,
+          "confidence": 0.974
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "seek": 0,
+      "start": 8.12,
+      "end": 10.0,
+      "text": "using existing wells. Game changer.",
+      "words": [
+        {
+          "text": "using",
+          "start": 8.12,
+          "end": 8.34,
+          "confidence": 0.999
+        },
+        {
+          "text": "existing",
+          "start": 8.34,
+          "end": 8.72,
+          "confidence": 0.999
+        },
+        {
+          "text": "wells.",
+          "start": 8.72,
+          "end": 9.06,
+          "confidence": 0.985
+        },
+        {
+          "text": "Game",
+          "start": 9.34,
+          "end": 9.66,
+          "confidence": 0.927
+        },
+        {
+          "text": "changer.",
+          "start": 9.66,
+          "end": 10.0,
+          "confidence": 0.477
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "seek": 0,
+      "start": 10.2,
+      "end": 11.34,
+      "text": "Number 4, Norway deployed the",
+      "words": [
+        {
+          "text": "Number",
+          "start": 10.2,
+          "end": 10.34,
+          "confidence": 0.829
+        },
+        {
+          "text": "4,",
+          "start": 10.34,
+          "end": 10.58,
+          "confidence": 0.924
+        },
+        {
+          "text": "Norway",
+          "start": 10.7,
+          "end": 10.88,
+          "confidence": 0.991
+        },
+        {
+          "text": "deployed",
+          "start": 10.88,
+          "end": 11.14,
+          "confidence": 0.992
+        },
+        {
+          "text": "the",
+          "start": 11.14,
+          "end": 11.34,
+          "confidence": 0.976
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "seek": 0,
+      "start": 11.34,
+      "end": 12.12,
+      "text": "world's first floating",
+      "words": [
+        {
+          "text": "world's",
+          "start": 11.34,
+          "end": 11.62,
+          "confidence": 0.987
+        },
+        {
+          "text": "first",
+          "start": 11.62,
+          "end": 11.82,
+          "confidence": 0.931
+        },
+        {
+          "text": "floating",
+          "start": 11.82,
+          "end": 12.12,
+          "confidence": 0.707
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "seek": 0,
+      "start": 12.18,
+      "end": 13.82,
+      "text": "offshore wind farm with typhoon-resistant",
+      "words": [
+        {
+          "text": "offshore",
+          "start": 12.18,
+          "end": 12.48,
+          "confidence": 0.928
+        },
+        {
+          "text": "wind",
+          "start": 12.48,
+          "end": 12.78,
+          "confidence": 0.992
+        },
+        {
+          "text": "farm",
+          "start": 12.78,
+          "end": 12.98,
+          "confidence": 0.912
+        },
+        {
+          "text": "with",
+          "start": 12.98,
+          "end": 13.16,
+          "confidence": 0.993
+        },
+        {
+          "text": "typhoon-resistant",
+          "start": 13.16,
+          "end": 13.82,
+          "confidence": 0.916
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "seek": 0,
+      "start": 13.82,
+      "end": 15.9,
+      "text": "turbines, boosting output by 40%.",
+      "words": [
+        {
+          "text": "turbines,",
+          "start": 13.82,
+          "end": 14.24,
+          "confidence": 0.998
+        },
+        {
+          "text": "boosting",
+          "start": 14.48,
+          "end": 14.68,
+          "confidence": 0.994
+        },
+        {
+          "text": "output",
+          "start": 14.68,
+          "end": 15.0,
+          "confidence": 0.998
+        },
+        {
+          "text": "by",
+          "start": 15.0,
+          "end": 15.2,
+          "confidence": 0.999
+        },
+        {
+          "text": "40%.",
+          "start": 15.2,
+          "end": 15.9,
+          "confidence": 0.989
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "seek": 0,
+      "start": 15.9,
+      "end": 16.83,
+      "text": "Boom. Number 3,",
+      "words": [
+        {
+          "text": "Boom.",
+          "start": 15.9,
+          "end": 16.42,
+          "confidence": 0.751
+        },
+        {
+          "text": "Number",
+          "start": 16.54,
+          "end": 16.68,
+          "confidence": 0.544
+        },
+        {
+          "text": "3,",
+          "start": 16.68,
+          "end": 16.83,
+          "confidence": 0.794
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "seek": 0,
+      "start": 16.83,
+      "end": 18.9,
+      "text": "Toyota announced solid-state EV batteries",
+      "words": [
+        {
+          "text": "Toyota",
+          "start": 16.83,
+          "end": 17.3,
+          "confidence": 0.883
+        },
+        {
+          "text": "announced",
+          "start": 17.3,
+          "end": 17.64,
+          "confidence": 0.994
+        },
+        {
+          "text": "solid-state",
+          "start": 17.64,
+          "end": 18.26,
+          "confidence": 0.829
+        },
+        {
+          "text": "EV",
+          "start": 18.26,
+          "end": 18.5,
+          "confidence": 0.97
+        },
+        {
+          "text": "batteries",
+          "start": 18.5,
+          "end": 18.9,
+          "confidence": 0.998
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "seek": 0,
+      "start": 18.9,
+      "end": 20.04,
+      "text": "charging in 10 minutes with",
+      "words": [
+        {
+          "text": "charging",
+          "start": 18.9,
+          "end": 19.28,
+          "confidence": 0.958
+        },
+        {
+          "text": "in",
+          "start": 19.28,
+          "end": 19.5,
+          "confidence": 0.997
+        },
+        {
+          "text": "10",
+          "start": 19.5,
+          "end": 19.64,
+          "confidence": 0.939
+        },
+        {
+          "text": "minutes",
+          "start": 19.64,
+          "end": 19.86,
+          "confidence": 0.988
+        },
+        {
+          "text": "with",
+          "start": 19.86,
+          "end": 20.04,
+          "confidence": 0.976
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "seek": 0,
+      "start": 20.04,
+      "end": 21.92,
+      "text": "800 mile range. Yes, please.",
+      "words": [
+        {
+          "text": "800",
+          "start": 20.04,
+          "end": 20.32,
+          "confidence": 0.992
+        },
+        {
+          "text": "mile",
+          "start": 20.32,
+          "end": 20.64,
+          "confidence": 0.504
+        },
+        {
+          "text": "range.",
+          "start": 20.64,
+          "end": 20.96,
+          "confidence": 0.982
+        },
+        {
+          "text": "Yes,",
+          "start": 21.38,
+          "end": 21.6,
+          "confidence": 0.828
+        },
+        {
+          "text": "please.",
+          "start": 21.68,
+          "end": 21.92,
+          "confidence": 0.991
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "seek": 0,
+      "start": 23.08,
+      "end": 25.16,
+      "text": "Number 2, Australian scientists cracked",
+      "words": [
+        {
+          "text": "Number",
+          "start": 23.08,
+          "end": 23.28,
+          "confidence": 0.987
+        },
+        {
+          "text": "2,",
+          "start": 23.28,
+          "end": 23.54,
+          "confidence": 0.984
+        },
+        {
+          "text": "Australian",
+          "start": 23.74,
+          "end": 24.18,
+          "confidence": 0.956
+        },
+        {
+          "text": "scientists",
+          "start": 24.18,
+          "end": 24.78,
+          "confidence": 0.97
+        },
+        {
+          "text": "cracked",
+          "start": 24.78,
+          "end": 25.16,
+          "confidence": 0.968
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "seek": 0,
+      "start": 25.16,
+      "end": 27.68,
+      "text": "low-cost hydrogen storage using ammonia-based",
+      "words": [
+        {
+          "text": "low-cost",
+          "start": 25.16,
+          "end": 25.7,
+          "confidence": 0.988
+        },
+        {
+          "text": "hydrogen",
+          "start": 25.7,
+          "end": 26.1,
+          "confidence": 0.977
+        },
+        {
+          "text": "storage",
+          "start": 26.1,
+          "end": 26.6,
+          "confidence": 0.936
+        },
+        {
+          "text": "using",
+          "start": 26.6,
+          "end": 26.98,
+          "confidence": 0.972
+        },
+        {
+          "text": "ammonia-based",
+          "start": 26.98,
+          "end": 27.68,
+          "confidence": 0.975
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "seek": 0,
+      "start": 27.68,
+      "end": 28.4,
+      "text": "fuel cells.",
+      "words": [
+        {
+          "text": "fuel",
+          "start": 27.68,
+          "end": 28.0,
+          "confidence": 0.821
+        },
+        {
+          "text": "cells.",
+          "start": 28.0,
+          "end": 28.4,
+          "confidence": 0.926
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "seek": 2864,
+      "start": 28.64,
+      "end": 30.18,
+      "text": "Clean fuel just got cheaper.",
+      "words": [
+        {
+          "text": "Clean",
+          "start": 28.64,
+          "end": 28.94,
+          "confidence": 0.988
+        },
+        {
+          "text": "fuel",
+          "start": 28.94,
+          "end": 29.26,
+          "confidence": 0.997
+        },
+        {
+          "text": "just",
+          "start": 29.26,
+          "end": 29.56,
+          "confidence": 0.99
+        },
+        {
+          "text": "got",
+          "start": 29.56,
+          "end": 29.78,
+          "confidence": 1.0
+        },
+        {
+          "text": "cheaper.",
+          "start": 29.78,
+          "end": 30.18,
+          "confidence": 0.999
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "seek": 2864,
+      "start": 30.48,
+      "end": 32.3,
+      "text": "In the top spot, perovskite",
+      "words": [
+        {
+          "text": "In",
+          "start": 30.48,
+          "end": 30.76,
+          "confidence": 0.879
+        },
+        {
+          "text": "the",
+          "start": 30.76,
+          "end": 30.86,
+          "confidence": 0.999
+        },
+        {
+          "text": "top",
+          "start": 30.86,
+          "end": 31.04,
+          "confidence": 0.997
+        },
+        {
+          "text": "spot,",
+          "start": 31.04,
+          "end": 31.4,
+          "confidence": 0.992
+        },
+        {
+          "text": "perovskite",
+          "start": 31.7,
+          "end": 32.3,
+          "confidence": 0.905
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "seek": 2864,
+      "start": 32.3,
+      "end": 34.42,
+      "text": "solar cells hit 32% efficiency",
+      "words": [
+        {
+          "text": "solar",
+          "start": 32.3,
+          "end": 32.52,
+          "confidence": 0.989
+        },
+        {
+          "text": "cells",
+          "start": 32.52,
+          "end": 32.9,
+          "confidence": 0.987
+        },
+        {
+          "text": "hit",
+          "start": 32.9,
+          "end": 33.16,
+          "confidence": 0.979
+        },
+        {
+          "text": "32%",
+          "start": 33.16,
+          "end": 33.56,
+          "confidence": 0.844
+        },
+        {
+          "text": "efficiency",
+          "start": 33.98,
+          "end": 34.42,
+          "confidence": 0.827
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "seek": 2864,
+      "start": 34.42,
+      "end": 34.76,
+      "text": "in",
+      "words": [
+        {
+          "text": "in",
+          "start": 34.42,
+          "end": 34.76,
+          "confidence": 0.789
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "seek": 2864,
+      "start": 34.78,
+      "end": 37.14,
+      "text": "real-world tests shattering silicon limits.",
+      "words": [
+        {
+          "text": "real-world",
+          "start": 34.78,
+          "end": 35.26,
+          "confidence": 0.964
+        },
+        {
+          "text": "tests",
+          "start": 35.26,
+          "end": 35.7,
+          "confidence": 0.997
+        },
+        {
+          "text": "shattering",
+          "start": 35.7,
+          "end": 36.24,
+          "confidence": 0.838
+        },
+        {
+          "text": "silicon",
+          "start": 36.24,
+          "end": 36.68,
+          "confidence": 0.915
+        },
+        {
+          "text": "limits.",
+          "start": 36.68,
+          "end": 37.14,
+          "confidence": 0.997
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "seek": 2864,
+      "start": 37.46,
+      "end": 38.76,
+      "text": "The future is bright, people.",
+      "words": [
+        {
+          "text": "The",
+          "start": 37.46,
+          "end": 37.64,
+          "confidence": 0.992
+        },
+        {
+          "text": "future",
+          "start": 37.64,
+          "end": 37.9,
+          "confidence": 0.999
+        },
+        {
+          "text": "is",
+          "start": 37.9,
+          "end": 38.16,
+          "confidence": 0.998
+        },
+        {
+          "text": "bright,",
+          "start": 38.16,
+          "end": 38.4,
+          "confidence": 0.996
+        },
+        {
+          "text": "people.",
+          "start": 38.5,
+          "end": 38.76,
+          "confidence": 0.971
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "seek": 2864,
+      "start": 38.96,
+      "end": 39.94,
+      "text": "Smash that subscribe",
+      "words": [
+        {
+          "text": "Smash",
+          "start": 38.96,
+          "end": 39.26,
+          "confidence": 0.646
+        },
+        {
+          "text": "that",
+          "start": 39.26,
+          "end": 39.6,
+          "confidence": 0.898
+        },
+        {
+          "text": "subscribe",
+          "start": 39.6,
+          "end": 39.94,
+          "confidence": 0.656
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "seek": 2864,
+      "start": 40.18,
+      "end": 41.62,
+      "text": "button for more tech revolutions.",
+      "words": [
+        {
+          "text": "button",
+          "start": 40.18,
+          "end": 40.4,
+          "confidence": 0.867
+        },
+        {
+          "text": "for",
+          "start": 40.4,
+          "end": 40.58,
+          "confidence": 0.998
+        },
+        {
+          "text": "more",
+          "start": 40.58,
+          "end": 40.76,
+          "confidence": 0.999
+        },
+        {
+          "text": "tech",
+          "start": 40.76,
+          "end": 41.0,
+          "confidence": 0.866
+        },
+        {
+          "text": "revolutions.",
+          "start": 41.0,
+          "end": 41.62,
+          "confidence": 0.992
+        }
+      ]
+    }
+  ],
+  "language": "en"
+}
