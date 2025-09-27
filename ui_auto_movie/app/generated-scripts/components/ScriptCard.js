@@ -30,6 +30,25 @@ const ScriptCard = ({ script, onAction }) => {
   const completionPercentage = getProcessCompletion(script);
   const status = statusInfo[script.status] || statusInfo.draft;
 
+  // Check if this script has an active video process
+  const hasActiveVideoProcess = script.video_process?.status === 'active';
+  const videoProcessStep = hasActiveVideoProcess ? script.video_process.current_step : null;
+  
+  // Get video process step display info
+  const getVideoStepInfo = (stepName) => {
+    const stepInfo = {
+      'input': { name: 'Input & Preferences', icon: '📝', color: 'text-blue-500' },
+      'loading': { name: 'AI Generation', icon: '🤖', color: 'text-purple-500' },
+      'scripts': { name: 'Script Selection', icon: '📄', color: 'text-green-500' },
+      'editing': { name: 'Script Editing', icon: '✏️', color: 'text-yellow-500' },
+      'voiceover': { name: 'Voice Generation', icon: '🎤', color: 'text-indigo-500' },
+      'social-media': { name: 'Social Media', icon: '📱', color: 'text-pink-500' },
+      'media': { name: 'Media Selection', icon: '🖼️', color: 'text-orange-500' },
+      'video-effects': { name: 'Video Effects', icon: '🎬', color: 'text-red-500' }
+    };
+    return stepInfo[stepName] || { name: stepName, icon: '⚙️', color: 'text-gray-500' };
+  };
+
   // Handle continue process action
   const handleContinueProcess = () => {
     navigateToStep(router, script);
@@ -43,14 +62,45 @@ const ScriptCard = ({ script, onAction }) => {
           <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight">
             {script.title}
           </h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.color} flex items-center`}>
-            <span className="mr-1">{status.icon}</span>
-            {status.label}
-          </span>
+          <div className="flex flex-col items-end space-y-1">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.color} flex items-center`}>
+              <span className="mr-1">{status.icon}</span>
+              {status.label}
+            </span>
+            {hasActiveVideoProcess && (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 flex items-center animate-pulse">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-ping"></div>
+                Video Processing
+              </span>
+            )}
+          </div>
         </div>
         <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2">
           {script.description}
         </p>
+        
+        {/* Video Process Current Step */}
+        {hasActiveVideoProcess && videoProcessStep && (
+          <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">{getVideoStepInfo(videoProcessStep).icon}</span>
+                <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                  {getVideoStepInfo(videoProcessStep).name}
+                </span>
+              </div>
+              <div className="text-xs text-blue-600 dark:text-blue-400">
+                {script.video_process.overall_progress || 0}%
+              </div>
+            </div>
+            <div className="mt-1 w-full bg-blue-200 dark:bg-blue-800 rounded-full h-1">
+              <div 
+                className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                style={{ width: `${script.video_process.overall_progress || 0}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content */}

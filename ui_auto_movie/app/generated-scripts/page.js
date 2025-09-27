@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import Controls from './components/Controls';
 import Pagination from './components/Pagination';
 import EmptyState from './components/EmptyState';
+import VideoProcessStatus from './components/VideoProcessStatus';
 import { GridView, ListView, KanbanView } from './views/ViewComponents';
 
 // Import hooks and utilities
@@ -41,6 +42,7 @@ const GeneratedScriptsPage = () => {
 		refresh
 	} = useScripts();
 
+	console.log('useScripts hook states:', {scripts});
 	// Debug logging (can be removed in production)
 	console.log('Generated Scripts Page - Scripts loaded:', scripts.length);
 
@@ -113,6 +115,9 @@ const GeneratedScriptsPage = () => {
 
 	// Check if we have active filters
 	const hasActiveFilters = searchQuery || filterBy !== FILTER_OPTIONS.ALL || sortBy !== SORT_OPTIONS.RECENT;
+	
+	// Check if any script has an active video process
+	const activeVideoProcess = scripts.find(script => script.video_process?.status === 'active')?.video_process;
 
 	return (
 		<div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -126,6 +131,11 @@ const GeneratedScriptsPage = () => {
 						Manage your AI-generated video scripts and track their production progress
 					</p>
 				</div>
+
+				{/* Video Process Status - Show if there's an active process */}
+				{activeVideoProcess && (
+					<VideoProcessStatus videoProcess={activeVideoProcess} />
+				)}
 
 				{/* Controls */}
 				<Controls

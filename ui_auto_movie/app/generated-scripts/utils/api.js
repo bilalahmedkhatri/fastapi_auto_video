@@ -60,7 +60,8 @@ export const fetchScripts = async (filters = {}) => {
         updated_at: script.updated_at,
         user_prompt: script.user_prompt,
         ai_model_used: script.ai_model_used,
-        generation_duration_ms: script.generation_duration_ms
+        generation_duration_ms: script.generation_duration_ms,
+        video_process: script.video_process  // Include video process status
       })),
       totalPages: data.total_pages,
       totalItems: data.total_items,

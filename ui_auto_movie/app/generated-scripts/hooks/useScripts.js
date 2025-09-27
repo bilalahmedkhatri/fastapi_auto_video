@@ -70,6 +70,26 @@ export const useScripts = (initialFilters = {}) => {
     }
   }, [loadScripts, isLoading]);
 
+  // Auto-refresh when there are active video processes
+  useEffect(() => {
+    const hasActiveProcesses = scripts.some(script => 
+      script.video_process?.status === 'active'
+    );
+    
+    if (hasActiveProcesses) {
+      console.log('Active video processes detected, setting up auto-refresh...');
+      const interval = setInterval(() => {
+        console.log('Auto-refreshing scripts due to active video processes...');
+        loadScripts();
+      }, 3000); // Refresh every 3 seconds
+      
+      return () => {
+        console.log('Clearing auto-refresh interval');
+        clearInterval(interval);
+      };
+    }
+  }, [scripts, loadScripts]);
+
   // Reset to first page when filters change (except pagination)
   useEffect(() => {
     if (currentPage !== 1) {

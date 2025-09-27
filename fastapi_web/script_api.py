@@ -1,15 +1,77 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select, func
 from sqlalchemy import and_
-from typing import Optional, List
-from models.db_models import ScriptGeneration, SocialMediaContent, get_session
+from typing import Optional, List, Dict, Any
+from models.db_models import ScriptGeneration, SocialMediaContent, VideoGenerationProcess, VideoProcessStep, get_session
 from pydantic import BaseModel
 import json
 from datetime import datetime
 
 router = APIRouter(prefix="/api/scripts", tags=["scripts"])
 
+# Helper function to get video process status for a script  
+def get_video_process_status(session: Session, user_id: str) -> Optional['VideoProcessStatus']:
+    """Get the current active video process status for a user"""
+    try:
+        # Get the most recent active process for the user
+        process_query = select(VideoGenerationProcess).where(
+            VideoGenerationProcess.user_id == user_id,
+            VideoGenerationProcess.status == "active"
+        ).order_by(VideoGenerationProcess.started_at.desc())
+        
+        process = session.exec(process_query).first()
+        if not process:
+            return None
+        
+        # Get all steps for this process
+        steps_query = select(VideoProcessStep).where(
+            VideoProcessStep.process_id == process.id
+        ).order_by(VideoProcessStep.step_order)
+        
+        steps = session.exec(steps_query).all()
+        
+        # Convert steps to response format
+        step_statuses = []
+        for step in steps:
+            step_statuses.append(VideoProcessStepStatus(
+                step_name=step.step_name,
+                step_order=step.step_order,
+                status=step.status,
+                started_at=step.started_at,
+                completed_at=step.completed_at,
+                duration_seconds=step.duration_seconds
+            ))
+        
+        return VideoProcessStatus(
+            process_id=process.id,
+            current_step=process.current_step,
+            overall_progress=process.overall_progress or 0,
+            status=process.status,
+            steps=step_statuses,
+            estimated_completion=process.estimated_completion
+        )
+        
+    except Exception as e:
+        print(f"Error getting video process status: {e}")
+        return None
+
 # Response models
+class VideoProcessStepStatus(BaseModel):
+    step_name: str
+    step_order: int
+    status: str  # not-started, in-progress, completed, failed, skipped
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    duration_seconds: Optional[int] = None
+
+class VideoProcessStatus(BaseModel):
+    process_id: Optional[int] = None
+    current_step: str
+    overall_progress: int = 0
+    status: str  # active, completed, failed, paused, cancelled
+    steps: List[VideoProcessStepStatus] = []
+    estimated_completion: Optional[datetime] = None
+
 class ScriptResponse(BaseModel):
     id: str
     user_id: str
@@ -28,6 +90,7 @@ class ScriptResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     status: str = "completed"  # Default status for existing scripts
+    video_process: Optional[VideoProcessStatus] = None  # Add video process status
 
 class PaginatedScriptsResponse(BaseModel):
     scripts: List[ScriptResponse]
@@ -116,6 +179,9 @@ async def get_scripts(
             except:
                 tags = []
             
+            # Get video process status for this user
+            video_process = get_video_process_status(session, script.user_id)
+            
             script_responses.append(ScriptResponse(
                 id=script.id,
                 user_id=script.user_id,
@@ -133,7 +199,8 @@ async def get_scripts(
                 ai_model_used=script.ai_model_used,
                 created_at=script.created_at,
                 updated_at=script.updated_at,
-                status="completed"  # Default status
+                status="completed" if not video_process else "in-process",  # Show if video is being processed
+                video_process=video_process  # Include video process status
             ))
         
         # Calculate pagination
@@ -171,6 +238,9 @@ async def get_script_by_id(
         except:
             tags = []
         
+        # Get video process status for this user
+        video_process = get_video_process_status(session, script.user_id)
+        
         return ScriptResponse(
             id=script.id,
             user_id=script.user_id,
@@ -188,7 +258,8 @@ async def get_script_by_id(
             ai_model_used=script.ai_model_used,
             created_at=script.created_at,
             updated_at=script.updated_at,
-            status="completed"
+            status="completed" if not video_process else "in-process",
+            video_process=video_process
         )
         
     except HTTPException:
