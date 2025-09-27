@@ -1,0 +1,35 @@
+# Log files
+*.log
+logs/
+pixabay_downloader.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Media files
+media/
+*.mp3
+*.mp4
+*.wav
+*.avi
+
+# User specific directories
+user_hashes/
+
+# Temporary files
+*.tmp
+*.temp
+# All log files
+*.log
+logs/
+pixabay_downloader.log
+__pycache__/
+*.pyc
+media/
+user_hashes/

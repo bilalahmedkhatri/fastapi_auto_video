@@ -1,0 +1,657 @@
+[2025-09-10 00:32:15,460: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 2.00 seconds... (1/100)
+
+[2025-09-10 00:32:21,521: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 4.00 seconds... (2/100)
+
+[2025-09-10 00:32:29,588: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 6.00 seconds... (3/100)
+
+[2025-09-10 19:32:32,575: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 2.00 seconds... (1/100)
+
+[2025-09-10 19:32:38,639: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 4.00 seconds... (2/100)
+
+[2025-09-10 19:32:46,715: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 6.00 seconds... (3/100)
+
+[2025-09-10 19:32:56,789: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 8.00 seconds... (4/100)
+
+[2025-09-10 19:33:08,849: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 10.00 seconds... (5/100)
+
+[2025-09-10 19:33:22,894: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 12.00 seconds... (6/100)
+
+[2025-09-10 19:33:38,977: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 14.00 seconds... (7/100)
+
+[2025-09-10 19:33:57,065: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 16.00 seconds... (8/100)
+
+[2025-09-10 19:34:17,151: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 18.00 seconds... (9/100)
+
+[2025-09-10 19:34:39,238: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 20.00 seconds... (10/100)
+
+[2025-09-10 19:35:03,320: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 22.00 seconds... (11/100)
+
+[2025-09-10 20:11:51,269: WARNING/MainProcess] consumer: Connection to broker lost. Trying to re-establish the connection...
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\retry.py", line 105, in call_with_retry
+    return do()
+           ^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 915, in <lambda>
+    lambda: command(*args, **kwargs),
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 936, in try_read
+    return conn.read_response(disconnect_on_error=False, push_request=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 650, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 115, in readline
+    self._read_from_socket()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 341, in start
+    blueprint.start(self)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\bootsteps.py", line 116, in start
+    step.start(parent)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 772, in start
+    c.loop(*c.loop_args())
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\loops.py", line 143, in synloop
+    _loop_cycle()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\loops.py", line 132, in _loop_cycle
+    connection.drain_events(timeout=2.0)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 341, in drain_events
+    return self.transport.drain_events(self.connection, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\virtual\base.py", line 997, in drain_events
+    get(self._deliver, timeout=timeout)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 598, in get
+    ret = self.handle_event(fileno, event)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 580, in handle_event
+    return self.on_readable(fileno), self
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 576, in on_readable
+    chan.handlers[type]()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 925, in _receive
+    ret.append(self._receive_one(c))
+               ^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 935, in _receive_one
+    response = c.parse_response()
+               ^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 938, in parse_response
+    response = self._execute(conn, try_read)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 914, in _execute
+    return conn.retry.call_with_retry(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\retry.py", line 108, in call_with_retry
+    fail(error)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 916, in <lambda>
+    lambda _: self._reconnect(conn),
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 904, in _reconnect
+    conn.connect()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 403, in connect_check_health
+    self.on_connect_check_health(check_health=check_health)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 523, in on_connect_check_health
+    self.read_response()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 650, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 115, in readline
+    self._read_from_socket()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+[2025-09-10 20:11:55,657: WARNING/MainProcess] D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py:392: CPendingDeprecationWarning: 
+In Celery 5.1 we introduced an optional breaking change which
+on connection loss cancels all currently executed tasks with late acknowledgement enabled.
+These tasks cannot be acknowledged as the connection is gone, and the tasks are automatically redelivered
+back to the queue. You can enable this behavior using the worker_cancel_long_running_tasks_on_connection_loss
+setting. In Celery 5.1 it is set to False by default. The setting will be set to True by default in Celery 6.0.
+
+  warnings.warn(CANCEL_TASKS_BY_DEFAULT, CPendingDeprecationWarning)
+
+[2025-09-12 20:48:38,929: WARNING/MainProcess] consumer: Connection to broker lost. Trying to re-establish the connection...
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\retry.py", line 105, in call_with_retry
+    return do()
+           ^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 915, in <lambda>
+    lambda: command(*args, **kwargs),
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 936, in try_read
+    return conn.read_response(disconnect_on_error=False, push_request=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 650, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 115, in readline
+    self._read_from_socket()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 341, in start
+    blueprint.start(self)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\bootsteps.py", line 116, in start
+    step.start(parent)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 772, in start
+    c.loop(*c.loop_args())
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\loops.py", line 143, in synloop
+    _loop_cycle()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\loops.py", line 132, in _loop_cycle
+    connection.drain_events(timeout=2.0)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 341, in drain_events
+    return self.transport.drain_events(self.connection, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\virtual\base.py", line 997, in drain_events
+    get(self._deliver, timeout=timeout)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 598, in get
+    ret = self.handle_event(fileno, event)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 580, in handle_event
+    return self.on_readable(fileno), self
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 576, in on_readable
+    chan.handlers[type]()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 925, in _receive
+    ret.append(self._receive_one(c))
+               ^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 935, in _receive_one
+    response = c.parse_response()
+               ^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 938, in parse_response
+    response = self._execute(conn, try_read)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 914, in _execute
+    return conn.retry.call_with_retry(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\retry.py", line 108, in call_with_retry
+    fail(error)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 916, in <lambda>
+    lambda _: self._reconnect(conn),
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 904, in _reconnect
+    conn.connect()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 403, in connect_check_health
+    self.on_connect_check_health(check_health=check_health)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 523, in on_connect_check_health
+    self.read_response()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 650, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 115, in readline
+    self._read_from_socket()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\_parsers\socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+[2025-09-12 20:48:39,069: WARNING/MainProcess] D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py:392: CPendingDeprecationWarning: 
+In Celery 5.1 we introduced an optional breaking change which
+on connection loss cancels all currently executed tasks with late acknowledgement enabled.
+These tasks cannot be acknowledged as the connection is gone, and the tasks are automatically redelivered
+back to the queue. You can enable this behavior using the worker_cancel_long_running_tasks_on_connection_loss
+setting. In Celery 5.1 it is set to False by default. The setting will be set to True by default in Celery 6.0.
+
+  warnings.warn(CANCEL_TASKS_BY_DEFAULT, CPendingDeprecationWarning)
+
+[2025-09-12 20:48:39,079: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Connection closed by server..
+Trying again in 2.00 seconds... (1/100)
+
+[2025-09-12 20:48:45,127: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 4.00 seconds... (2/100)
+
+[2025-09-12 20:48:53,192: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 6.00 seconds... (3/100)
+
+[2025-09-12 20:49:03,263: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 8.00 seconds... (4/100)
+
+[2025-09-12 20:49:15,327: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 10.00 seconds... (5/100)
+
+[2025-09-12 20:49:29,414: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 12.00 seconds... (6/100)
+
+[2025-09-12 20:49:45,484: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 14.00 seconds... (7/100)
+
+[2025-09-12 20:50:03,554: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 16.00 seconds... (8/100)
+
+[2025-09-12 20:50:23,604: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 18.00 seconds... (9/100)
+
+[2025-09-12 20:50:45,676: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 20.00 seconds... (10/100)
+
+[2025-09-12 20:51:09,746: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 22.00 seconds... (11/100)
+
+[2025-09-12 20:51:35,810: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 24.00 seconds... (12/100)
+
+[2025-09-12 20:52:03,892: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 26.00 seconds... (13/100)
+
+[2025-09-12 20:52:33,972: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 28.00 seconds... (14/100)
+
+[2025-09-12 20:53:06,062: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 30.00 seconds... (15/100)
+
+[2025-09-12 20:53:40,146: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 20:54:16,215: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 20:54:52,991: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 20:55:29,074: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:09:08,889: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:09:44,956: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:10:21,035: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:10:57,115: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:11:33,150: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:12:09,199: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:12:45,291: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:13:21,366: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:13:57,430: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:14:33,490: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:15:09,560: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:15:45,626: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:16:21,676: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:16:57,725: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:17:33,770: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:18:09,858: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:18:45,921: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:19:21,977: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:19:58,060: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:20:34,150: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:21:10,201: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:21:46,251: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:22:22,316: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:22:58,379: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:23:34,445: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:24:10,514: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:24:46,578: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:25:22,629: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:25:58,676: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:26:34,757: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:27:10,824: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:27:46,893: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:28:22,973: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:28:59,039: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:29:35,140: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:30:11,202: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:30:47,267: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:31:23,332: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:31:59,398: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:32:35,433: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:33:11,493: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:33:47,543: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:34:23,597: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:34:59,693: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:35:35,770: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:36:11,842: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:36:47,928: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:37:24,007: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:38:00,087: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:38:36,165: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:39:12,221: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:39:48,293: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:40:24,399: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:41:00,493: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:41:36,573: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:42:12,649: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:42:48,731: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:43:24,814: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:44:00,894: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:44:36,988: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:45:13,066: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:45:49,137: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:46:25,217: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:47:01,335: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:47:37,420: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:48:13,486: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:48:49,571: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:49:25,652: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:50:01,737: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:50:37,800: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:51:13,900: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:51:49,966: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:52:26,028: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:53:02,070: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:53:38,118: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:54:14,198: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:54:50,276: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:55:26,325: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:56:02,422: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:56:38,505: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:57:14,603: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 32.00 seconds... (16/100)
+
+[2025-09-12 22:57:50,683: CRITICAL/MainProcess] Unrecoverable error: OperationalError('Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.')
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\virtual\base.py", line 951, in create_channel
+    return self._avail_channels.pop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: pop from empty list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 389, in connect_check_health
+    sock = self.retry.call_with_retry(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\retry.py", line 105, in call_with_retry
+    return do()
+           ^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 390, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+            ^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 803, in _connect
+    raise err
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 787, in _connect
+    sock.connect(socket_address)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 472, in _reraise_as_library_errors
+    yield
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 459, in _ensure_connection
+    return retry_over_time(
+           ^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\utils\functional.py", line 318, in retry_over_time
+    return fun(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 938, in _connection_factory
+    self._connection = self._establish_connection()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 860, in _establish_connection
+    conn = self.transport.establish_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\virtual\base.py", line 975, in establish_connection
+    self._avail_channels.append(self.create_channel(self))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\virtual\base.py", line 953, in create_channel
+    channel = self.Channel(connection)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\transport\redis.py", line 751, in __init__
+    self.client.ping()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\commands\core.py", line 1219, in ping
+    return self.execute_command("PING", **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 621, in execute_command
+    return self._execute_command(*args, **options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\client.py", line 627, in _execute_command
+    conn = self.connection or pool.get_connection()
+                              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\utils.py", line 195, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 1533, in get_connection
+    connection.connect()
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\redis\connection.py", line 397, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\worker.py", line 203, in start
+    self.blueprint.start(self)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\bootsteps.py", line 116, in start
+    step.start(parent)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\bootsteps.py", line 365, in start
+    return self.obj.start()
+           ^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 341, in start
+    blueprint.start(self)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\bootsteps.py", line 116, in start
+    step.start(parent)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\connection.py", line 21, in start
+    c.connection = c.connect()
+                   ^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 472, in connect
+    conn = self.connection_for_read(heartbeat=self.amqheartbeat)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 478, in connection_for_read
+    return self.ensure_connected(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\celery\worker\consumer\consumer.py", line 530, in ensure_connected
+    conn = conn.ensure_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 406, in ensure_connection
+    self._ensure_connection(*args, **kwargs)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 458, in _ensure_connection
+    with ctx():
+         ^^^^^
+  File "C:\Users\Bilal\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "D:\dev\fastapi_web\fastapp\Lib\site-packages\kombu\connection.py", line 476, in _reraise_as_library_errors
+    raise ConnectionError(str(exc)) from exc
+kombu.exceptions.OperationalError: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.
+[2025-09-27 15:17:59,962: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 2.00 seconds... (1/100)
+
+[2025-09-27 15:18:06,021: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 4.00 seconds... (2/100)
+
+[2025-09-27 15:18:14,101: ERROR/MainProcess] consumer: Cannot connect to redis://localhost:6379/0: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it..
+Trying again in 6.00 seconds... (3/100)
+

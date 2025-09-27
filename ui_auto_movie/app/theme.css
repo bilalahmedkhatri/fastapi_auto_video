@@ -1,0 +1,169 @@
+/* Dark mode variations */
+
+:root {
+  --background-light: #f9fafb;
+  --text-light: #111827;
+  --sidebar-light: #f3f4f6;
+  --card-light: #ffffff;
+  --border-light: #e5e7eb;
+  
+  /* Default dark theme */
+  --background-dark: #1f2937;
+  --text-dark: #f3f4f6;
+  --sidebar-dark: #111827;
+  --card-dark: #374151;
+  --border-dark: #4b5563;
+  
+  /* Advanced dark theme */
+  --background-advanced-dark: #121212;
+  --text-advanced-dark: #e0e0e0;
+  --sidebar-advanced-dark: #1e1e1e;
+  --card-advanced-dark: #282828;
+  --border-advanced-dark: #404040;
+  
+  /* Modern dark theme */
+  --background-modern-dark: #0f172a;
+  --text-modern-dark: #f1f5f9;
+  --sidebar-modern-dark: #0f172a;
+  --card-modern-dark: #1e293b;
+  --border-modern-dark: #334155;
+}
+
+/* Light theme (default) */
+.theme-light {
+  --background: var(--background-light);
+  --text: var(--text-light);
+  --sidebar: var(--sidebar-light);
+  --card: var(--card-light);
+  --border: var(--border-light);
+}
+
+/* Default dark theme */
+.dark.theme-dark {
+  --background: var(--background-dark);
+  --text: var(--text-dark);
+  --sidebar: var(--sidebar-dark);
+  --card: var(--card-dark);
+  --border: var(--border-dark);
+}
+
+/* Advanced dark theme */
+.dark.theme-advanced-dark {
+  --background: var(--background-advanced-dark);
+  --text: var(--text-advanced-dark);
+  --sidebar: var(--sidebar-advanced-dark);
+  --card: var(--card-advanced-dark);
+  --border: var(--border-advanced-dark);
+}
+
+/* Modern dark theme */
+.dark.theme-modern-dark {
+  --background: var(--background-modern-dark);
+  --text: var(--text-modern-dark);
+  --sidebar: var(--sidebar-modern-dark);
+  --card: var(--card-modern-dark);
+  --border: var(--border-modern-dark);
+}
+
+/* Apply theme colors to elements */
+.dark body {
+  background-color: var(--background);
+  color: var(--text);
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: var(--background);
+}
+
+.dark .bg-white,
+.dark .bg-gray-50 {
+  background-color: var(--card);
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: var(--border);
+}
+
+.dark .text-gray-500 {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-700,
+.dark .text-gray-800,
+.dark .text-gray-900 {
+  color: var(--text);
+}
+
+.dark .shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--sidebar);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: var(--primary);
+}
+
+/* Buttons */
+.dark .bg-indigo-50 {
+  background-color: rgba(99, 102, 241, 0.2);
+}
+
+.dark .text-indigo-700 {
+  color: #818cf8;
+}
+
+.dark input[type="radio"] {
+  background-color: var(--sidebar);
+  border-color: var(--text);
+}
+
+.dark input[type="radio"]:checked {
+  background-color: #4f46e5; /* Indigo-600, matches Tailwind's text-indigo-600 */
+  border-color: #4f46e5;
+}
+
+.dark .inline-flex.items-center.px-3.rounded-l-md.border.border-r-0.border-gray-300.bg-gray-50.text-gray-500 {
+  background-color: var(--sidebar);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Dark mode notification styles */
+.dark .bg-green-50 {
+  background-color: rgba(6, 78, 59, 0.2);
+  border-color: rgba(6, 78, 59, 0.4);
+}
+
+.dark .text-green-800 {
+  color: #4ade80;
+}
+
+.dark .text-green-400 {
+  color: #34d399;
+}
+
+.dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.2);
+  border-color: rgba(127, 29, 29, 0.4);
+}
+
+.dark .text-red-800 {
+  color: #f87171;
+}
+
+.dark .text-red-400 {
+  color: #ef4444;
+}

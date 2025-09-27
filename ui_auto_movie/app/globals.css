@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import './theme.css';
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+  
+  /* Toast Variables - Light Mode */
+  --toast-bg: #ffffff;
+  --toast-color: #1f2937;
+  --toast-border: #e5e7eb;
+  
+  --toast-success-bg: #f0fdf4;
+  --toast-success-color: #166534;
+  --toast-success-border: #bbf7d0;
+  
+  --toast-error-bg: #fef2f2;
+  --toast-error-color: #dc2626;
+  --toast-error-border: #fecaca;
+  
+  --toast-loading-bg: #fffbeb;
+  --toast-loading-color: #d97706;
+  --toast-loading-border: #fed7aa;
+  
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+}
+
+[data-theme="dark"], 
+[data-theme="advanced-dark"], 
+[data-theme="modern-dark"],
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 17, 24, 39;
+  
+  /* Toast Variables - Dark Mode */
+  --toast-bg: #374151;
+  --toast-color: #f9fafb;
+  --toast-border: #4b5563;
+  
+  --toast-success-bg: #064e3b;
+  --toast-success-color: #6ee7b7;
+  --toast-success-border: #047857;
+  
+  --toast-error-bg: #7f1d1d;
+  --toast-error-color: #fca5a5;
+  --toast-error-border: #dc2626;
+  
+  --toast-loading-bg: #78350f;
+  --toast-loading-color: #fcd34d;
+  --toast-loading-border: #d97706;
+  
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}

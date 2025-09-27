@@ -1,0 +1,111 @@
+{
+  "test_timestamp": "2025-09-05T22:25:40.961858",
+  "total_voices": 46,
+  "language_stats": {
+    "American English \ud83c\uddfa\ud83c\uddf8": {
+      "total": 18,
+      "male": 8,
+      "female": 10,
+      "grades": {
+        "B": 15,
+        "A": 3
+      }
+    },
+    "British English \ud83c\uddec\ud83c\udde7": {
+      "total": 8,
+      "male": 4,
+      "female": 4,
+      "grades": {
+        "B": 6,
+        "A": 2
+      }
+    },
+    "French \ud83c\uddeb\ud83c\uddf7": {
+      "total": 1,
+      "male": 0,
+      "female": 1,
+      "grades": {
+        "C": 1
+      }
+    },
+    "Hindi \ud83c\uddee\ud83c\uddf3": {
+      "total": 4,
+      "male": 2,
+      "female": 2,
+      "grades": {
+        "A": 1,
+        "C": 3
+      }
+    },
+    "Italian \ud83c\uddee\ud83c\uddf9": {
+      "total": 2,
+      "male": 1,
+      "female": 1,
+      "grades": {
+        "C": 2
+      }
+    },
+    "Japanese \ud83c\uddef\ud83c\uddf5": {
+      "total": 5,
+      "male": 1,
+      "female": 4,
+      "grades": {
+        "A": 1,
+        "C": 4
+      }
+    },
+    "Mandarin Chinese \ud83c\udde8\ud83c\uddf3": {
+      "total": 8,
+      "male": 4,
+      "female": 4,
+      "grades": {
+        "C": 8
+      }
+    }
+  },
+  "sample_voices": [
+    {
+      "voice_id": "af_alloy",
+      "language": "American English \ud83c\uddfa\ud83c\uddf8",
+      "gender": "female",
+      "quality_grade": "B",
+      "accent": "american"
+    },
+    {
+      "voice_id": "af_aoede",
+      "language": "American English \ud83c\uddfa\ud83c\uddf8",
+      "gender": "female",
+      "quality_grade": "B",
+      "accent": "american"
+    },
+    {
+      "voice_id": "af_bella",
+      "language": "American English \ud83c\uddfa\ud83c\uddf8",
+      "gender": "female",
+      "quality_grade": "A",
+      "accent": "american"
+    },
+    {
+      "voice_id": "af_jessica",
+      "language": "American English \ud83c\uddfa\ud83c\uddf8",
+      "gender": "female",
+      "quality_grade": "B",
+      "accent": "american"
+    },
+    {
+      "voice_id": "af_kore",
+      "language": "American English \ud83c\uddfa\ud83c\uddf8",
+      "gender": "female",
+      "quality_grade": "B",
+      "accent": "american"
+    }
+  ],
+  "scraper_stats": {
+    "start_time": "2025-09-05 22:25:40.961858",
+    "voices_found": 46,
+    "voices_added": 0,
+    "voices_updated": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

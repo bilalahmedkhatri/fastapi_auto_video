@@ -1,0 +1,220 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+node_modules/
+
+# Testing
+/coverage
+*.coverage
+.pytest_cache/
+.tox/
+
+# Next.js
+/.next/
+/out/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# Production
+/build
+/dist
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+gen_vedio/
+pyvenv.cfg
+
+# FastAPI / Uvicorn
+.uvicorn/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+db.sqlite3
+*.db-journal
+
+# Logs
+logs/
+*.log
+*.log.*
+.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Media Files
+media/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.aac
+*.ogg
+*.wma
+*.m4a
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+*.webp
+
+# Temporary Files
+*.tmp
+*.temp
+*~
+.DS_Store
+*.pem
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment Files
+.env*.local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Cache
+.cache/
+.parcel-cache/
+.sass-cache/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# User-specific
+user_hashes/
+*_temp/
+*TEMP*
+*.back
+*.bak
+backup_*
+*backup*
+
+# Migration files (if sensitive)
+migration_file_size.log
+video_backup_info_*.txt
+
+# Google API temp files
+google_search_temp/
+google_custom_search_api/
+
+# Configuration files that may contain secrets
+kokoro_scraper.conf
+
+# Gradio
+.gradio/
+certificate.pem
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Prisma
+prisma/migrations/
+*.db-journal
+
+# JSON data files (potentially large/sensitive)
+extracted_voices.json
+
+# Debug and test output
+debug_output.txt
+test_output.txt
+
+# Specific temp files found
+*frontend_userTEMP_*
+*_frontend_user*
+
+# Additional backup patterns
+*.backup
+*_backup_*
+
+# Git directories (nested repos)
+**/.git/
+
+# GitHub workflows (if they contain secrets)
+.github/workflows/secrets.yml
+
+# Public uploads and user content
+public/uploads/
+public/media/
+uploads/
+
+# Next.js specific cache and build files
+.next/cache/
+.next/trace
+.next/server/
+.next/static/
+build-manifest.json
+react-loadable-manifest.json
+routes-manifest.json
+prerender-manifest.json
+app-build-manifest.json
+
+# Turborepo
+.turbo
+
+# Vercel specific
+.vercel/
+*.vercel.json

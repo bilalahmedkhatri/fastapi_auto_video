@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String   @id @default(uuid())
+  name                   String
+  email                  String   @unique
+  password               String
+  avatar                 String?
+  bio                    String?
+  phone                  String?
+  preferredLanguage      String?  @default("English") @map("preferred_language")
+  notificationEnabled    Boolean? @default(true) @map("notification_enabled")
+  theme                  String?  @default("light")
+  company                String?
+  jobTitle               String?  @map("job_title")
+  website                String?
+  twitter                String?
+  instagram              String?
+  youtube                String?
+  tiktok                 String?
+  apiKey                 String?  @map("api_key")
+  storagePreference      String?  @default("cloud") @map("storage_preference")
+  downloadFormat         String?  @default("mp4") @map("download_format")
+  maxGenerationsPerMonth Int?     @default(10) @map("max_generations_per_month")
+  descriptionTemplate    String?  @map("description_template")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  promptTemplates        PromptTemplate[]
+
+  @@map("user")
+}
+
+model PromptTemplate {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  content     String   @db.Text
+  variables   String[] @default([]) // e.g. ["title","topic"]
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@map("prompt_template")
+}

@@ -1,0 +1,507 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useTheme } from '@/components/ThemeProvider';
+import InputWithLoading from '@/components/InputWithLoading';
+
+import Header from 'components/Header';
+
+export default function Profile() {
+  const router = useRouter();
+  const { theme: currentTheme, setTheme } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    // Personal Info
+    name: '',
+    email: '',
+    avatar: '',
+    bio: '',
+    phone: '',
+    
+    // Preferences
+    preferredLanguage: 'English',
+    notificationEnabled: true,
+    theme: 'light',
+    
+    // Professional Info
+    company: '',
+    jobTitle: '',
+    website: '',
+    
+    // Social Media
+    twitter: '',
+    instagram: '',
+    youtube: '',
+    tiktok: '',
+    youtubeDescriptionTemplate: '',
+
+    // Additional settings
+    emailVerified: false,
+    accountStatus: 'active',
+  });
+
+  const [formData, setFormData] = useState({ ...profileData });
+  const [isEditing, setIsEditing] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+
+  useEffect(() => {
+    // Set document title
+    document.title = 'Your Profile';
+    
+    // Fetch user profile data when the component mounts
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile');
+        }
+        const data = await response.json();
+        setProfileData(data);
+        setFormData(data);
+        // Sync theme with the user's preference
+        if (data.theme && data.theme !== currentTheme) {
+          setTheme(data.theme);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        showNotification('Failed to load profile data. Please try again.', 'error');
+      }
+    };
+    
+    fetchProfileData();
+  }, [currentTheme, setTheme]);
+  
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    // Auto-dismiss notification after 5 seconds
+    setTimeout(() => {
+      setNotification({ message: '', type: '' });
+    }, 5000);
+  };
+  
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Discard changes if canceling edit mode
+      setFormData({ ...profileData });
+    }
+    setIsEditing(!isEditing);
+  };
+  
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+  
+  const handleThemeChange = (e) => {
+    const newTheme = e.target.value;
+    setFormData(prev => ({ ...prev, theme: newTheme }));
+    setTheme(newTheme); // Update the theme context
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      const updatedProfile = await response.json();
+      setProfileData(updatedProfile);
+      setIsEditing(false);
+      showNotification('Profile updated successfully!', 'success');
+      
+      // If theme was changed, make sure it's applied
+      if (updatedProfile.theme !== currentTheme) {
+        setTheme(updatedProfile.theme);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showNotification(error.message || 'Failed to update profile. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      
+      {/* Notification */}
+      {notification.message && (
+        <div 
+          className={`fixed bottom-4 left-4 z-50 px-4 py-2 rounded-md shadow-md text-white ${
+            notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+          }`}
+        >
+          {notification.message}
+        </div>
+      )}
+      
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Your Profile</h1>
+          
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            {/* Profile Header */}
+            <div className="relative bg-indigo-600 h-32 sm:h-48">
+              {/* Edit Button */}
+              <button
+                onClick={handleEditToggle}
+                className="absolute top-2 right-2 bg-white text-indigo-600 hover:bg-gray-100 px-3 py-1 rounded-md text-sm font-medium shadow"
+              >
+                {isEditing ? 'Cancel' : 'Edit Profile'}
+              </button>
+              
+              {/* Simple Avatar */}
+              <div className="absolute -bottom-12 left-4 sm:left-8">
+                <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-white overflow-hidden bg-gray-200">
+                  {profileData.avatar ? (
+                    <Image
+                      src={profileData.avatar || '/default-avatar.png'}
+                      alt="Profile"
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="pt-16 pb-8 px-4 sm:px-8">
+              {/* Form Tabs */}
+              <div className="border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+                  <a href="#personal-info" className="border-indigo-500 text-indigo-600 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                    Personal Info
+                  </a>
+                  <a href="#preferences" className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                    Preferences
+                  </a>
+                  <a href="#professional-info" className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                    Professional Info
+                  </a>
+                  <a href="#social-media" className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                    Social Media
+                  </a>
+                </nav>
+              </div>
+              
+              {/* Personal Info Section */}
+              <div id="personal-info" className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <InputWithLoading
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={isEditing ? formData.name : profileData.name}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                    <InputWithLoading
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={isEditing ? formData.email : profileData.email}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <InputWithLoading
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={isEditing ? formData.phone : profileData.phone}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="sm:col-span-2">
+                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700">Bio</label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      rows={4}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      placeholder={isEditing ? "Tell us a bit about yourself" : ""}
+                      value={isEditing ? formData.bio : profileData.bio}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Preferences Section */}
+              <div id="preferences" className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Preferences</h2>
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                  <div>
+                    <label htmlFor="preferredLanguage" className="block text-sm font-medium text-gray-700">Preferred Language</label>
+                    <select
+                      id="preferredLanguage"
+                      name="preferredLanguage"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      value={isEditing ? formData.preferredLanguage : profileData.preferredLanguage}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    >
+                      <option value="English">English</option>
+                      <option value="Spanish">Spanish</option>
+                      <option value="French">French</option>
+                      <option value="German">German</option>
+                      <option value="Chinese">Chinese</option>
+                      <option value="Japanese">Japanese</option>
+                      <option value="Korean">Korean</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="theme" className="block text-sm font-medium text-gray-700">Theme</label>
+                    <select
+                      id="theme"
+                      name="theme"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      value={isEditing ? formData.theme : profileData.theme}
+                      onChange={handleThemeChange}
+                      disabled={!isEditing}
+                    >
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                      <option value="advanced-dark">Advanced Dark</option>
+                      <option value="modern-dark">Modern Dark</option>
+                    </select>
+                  </div>
+                  
+                  <div className="sm:col-span-2">
+                    <div className="flex items-center">
+                      <input
+                        id="notificationEnabled"
+                        name="notificationEnabled"
+                        type="checkbox"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        checked={isEditing ? formData.notificationEnabled : profileData.notificationEnabled}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                      />
+                      <label htmlFor="notificationEnabled" className="ml-2 block text-sm text-gray-700">
+                        Enable email notifications
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Professional Info Section */}
+              <div id="professional-info" className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Professional Information</h2>
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                  <div>
+                    <label htmlFor="company" className="block text-sm font-medium text-gray-700">Company</label>
+                    <InputWithLoading
+                      id="company"
+                      name="company"
+                      type="text"
+                      value={isEditing ? formData.company : profileData.company}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700">Job Title</label>
+                    <InputWithLoading
+                      id="jobTitle"
+                      name="jobTitle"
+                      type="text"
+                      value={isEditing ? formData.jobTitle : profileData.jobTitle}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="sm:col-span-2">
+                    <label htmlFor="website" className="block text-sm font-medium text-gray-700">Website</label>
+                    <InputWithLoading
+                      id="website"
+                      name="website"
+                      type="url"
+                      value={isEditing ? formData.website : profileData.website}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Social Media Section */}
+              <div id="social-media" className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Social Media</h2>
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                  <div>
+                    <label htmlFor="twitter" className="block text-sm font-medium text-gray-700">Twitter</label>
+                    <div className="mt-1 flex rounded-md shadow-sm">
+                      <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm">
+                        @
+                      </span>
+                      <InputWithLoading
+                        id="twitter"
+                        name="twitter"
+                        type="text"
+                        className="flex-1 min-w-0 rounded-none rounded-r-md"
+                        value={isEditing ? formData.twitter : profileData.twitter}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                        isLoading={isLoading}
+                        containerClass="flex-1"
+                        inputClass="flex-1 min-w-0 rounded-none rounded-r-md"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="instagram" className="block text-sm font-medium text-gray-700">Instagram</label>
+                    <div className="mt-1 flex rounded-md shadow-sm">
+                      <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm">
+                        @
+                      </span>
+                      <InputWithLoading
+                        id="instagram"
+                        name="instagram"
+                        type="text"
+                        value={isEditing ? formData.instagram : profileData.instagram}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                        isLoading={isLoading}
+                        containerClass="flex-1"
+                        inputClass="flex-1 min-w-0 rounded-none rounded-r-md"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="youtube" className="block text-sm font-medium text-gray-700">YouTube</label>
+                    <InputWithLoading
+                      id="youtube"
+                      name="youtube"
+                      type="text"
+                      value={isEditing ? formData.youtube : profileData.youtube}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="tiktok" className="block text-sm font-medium text-gray-700">TikTok</label>
+                    <div className="mt-1 flex rounded-md shadow-sm">
+                      <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm">
+                        @
+                      </span>
+                      <InputWithLoading
+                        id="tiktok"
+                        name="tiktok"
+                        type="text"
+                        value={isEditing ? formData.tiktok : profileData.tiktok}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                        isLoading={isLoading}
+                        containerClass="flex-1"
+                        inputClass="flex-1 min-w-0 rounded-none rounded-r-md"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="sm:col-span-2">
+                    <label htmlFor="youtubeDescriptionTemplate" className="block text-sm font-medium text-gray-700">YouTube Description Template</label>
+                    <textarea
+                      id="youtubeDescriptionTemplate"
+                      name="youtubeDescriptionTemplate"
+                      rows={4}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      value={isEditing ? formData.youtubeDescriptionTemplate : profileData.youtubeDescriptionTemplate}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      placeholder={isEditing ? "Enter your default YouTube video description template" : ""}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Submit Button */}
+              {isEditing && (
+                <div className="pt-5">
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleEditToggle}
+                      className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving...
+                        </div>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

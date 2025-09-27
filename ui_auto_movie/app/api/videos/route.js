@@ -1,0 +1,115 @@
+import { NextResponse } from 'next/server';
+import { prisma } from 'lib/prisma';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+
+// Helper to get the current user from cookies
+const getCurrentUser = async () => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token');
+  
+  if (!token) {
+    return null;
+  }
+  
+  try {
+    // Verify and decode the token
+    const decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'secret');
+    
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id }
+    });
+    
+    return user;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+export async function GET(request) {
+  try {
+    const user = await getCurrentUser();
+    
+    // Return 401 if not authenticated
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Forward to the FastAPI backend to get videos for this user
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    
+    // Build query URL with user_id parameter
+    let apiUrl = `${backendUrl}/api/videos?user_id=${user.id}`;
+    if (status) {
+      apiUrl += `&status=${status}`;
+    }
+    
+    // Get videos from the backend
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Backend returned error:', response.status, errorText);
+      return NextResponse.json({ error: `Backend error: ${errorText}` }, { status: response.status });
+    }
+    
+    const videos = await response.json();
+    return NextResponse.json(videos);
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    return NextResponse.json({ error: 'Failed to fetch videos' }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const user = await getCurrentUser();
+    
+    // Return 401 if not authenticated
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Get the request body
+    const body = await request.json();
+    
+    // Validate required fields
+    if (!body.prompt) {
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+    }
+
+    // Forward the request to the FastAPI backend
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    
+    // Add user_id to the request body
+    const videoData = {
+      ...body,
+      user_id: user.id
+    };
+    
+    const response = await fetch(`${backendUrl}/api/videos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(videoData),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Backend returned error:', response.status, errorText);
+      return NextResponse.json({ error: `Backend error: ${errorText}` }, { status: response.status });
+    }
+    
+    // Get the response from the backend
+    const responseData = await response.json();
+    return NextResponse.json(responseData, { status: 201 });
+  } catch (error) {
+    console.error('Error creating video:', error);
+    return NextResponse.json({ error: 'Failed to create video' }, { status: 500 });
+  }
+}
