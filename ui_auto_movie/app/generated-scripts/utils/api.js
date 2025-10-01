@@ -11,7 +11,7 @@ export const fetchScripts = async (filters = {}) => {
     filterBy = 'all',
     searchQuery = '',
     itemsPerPage = PAGINATION_CONFIG.ITEMS_PER_PAGE,
-    userId = null
+    userId = null  // Will be handled by mapping in Next.js API route
   } = filters;
 
   try {
@@ -24,7 +24,7 @@ export const fetchScripts = async (filters = {}) => {
       limit: itemsPerPage.toString()
     });
 
-    // Add user_id if provided
+    // Add user_id if provided (Next.js API route will handle mapping)
     if (userId) {
       params.append('user_id', userId);
     }

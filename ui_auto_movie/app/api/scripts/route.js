@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 
 const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
 
+// Simple mapping function for user IDs
+function mapPrismaUserToFastAPI(prismaUserId) {
+  // For now, use a simple mapping - you can make this more sophisticated later
+  const userMapping = {
+    // Add mappings for testing
+    'test-uuid-123': 'demo_user',
+    'test-uuid-456': 'test_user_123',
+    // Add your actual Prisma user UUIDs here as you discover them
+    // Format: 'prisma-uuid': 'fastapi-user-id'
+  };
+  
+  // If no mapping found, default to 'demo_user' for testing
+  return userMapping[prismaUserId] || 'demo_user';
+}
+
 // GET /api/scripts - Fetch scripts with filters and pagination
 export async function GET(request) {
   try {
@@ -11,7 +26,10 @@ export async function GET(request) {
     const filterBy = searchParams.get('filter') || 'all';
     const searchQuery = searchParams.get('search') || '';
     const itemsPerPage = searchParams.get('limit') || '10';
-    const userId = searchParams.get('user_id') || '';
+    const frontendUserId = searchParams.get('user_id') || '';
+
+    // Map frontend user ID to FastAPI user ID
+    const fastApiUserId = frontendUserId ? mapPrismaUserToFastAPI(frontendUserId) : 'demo_user';
 
     // Build query parameters for FastAPI
     const params = new URLSearchParams({
@@ -22,12 +40,11 @@ export async function GET(request) {
       search: searchQuery,
     });
 
-    if (userId) {
-      params.append('user_id', userId);
-    }
+    // Always pass a user_id to FastAPI (mapped or default)
+    params.append('user_id', fastApiUserId);
 
-    // Call FastAPI backend
-    const response = await fetch(`${FASTAPI_BASE_URL}/api/scripts?${params}`, {
+    // Call FastAPI backend (note the trailing slash)
+    const response = await fetch(`${FASTAPI_BASE_URL}/api/scripts/?${params}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

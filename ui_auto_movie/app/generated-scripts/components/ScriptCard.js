@@ -36,6 +36,7 @@ const ScriptCard = ({ script, onAction }) => {
   
   // Get video process step display info
   const getVideoStepInfo = (stepName) => {
+    console.log('Getting video step info for:', stepName);
     const stepInfo = {
       'input': { name: 'Input & Preferences', icon: '📝', color: 'text-blue-500' },
       'loading': { name: 'AI Generation', icon: '🤖', color: 'text-purple-500' },

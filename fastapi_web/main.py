@@ -1,14 +1,10 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query, Response, status, Request, Body
+import uvicorn, json, uuid, logging, time
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query, Response, status, Request, Body, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Dict, Any, List
 from sqlmodel import Session, select
 from models.db_models import VideoCreationRequest, Video, engine, create_db_and_tables, get_session
-import uvicorn
-import json
-import uuid
 from datetime import datetime
-import logging
-import time
 from celery_app import generate_video as generate_video_task, celery_app, VideoProcessingState, redis_client
 
 # Import script generator API
@@ -53,6 +49,14 @@ except ImportError:
     logging.warning("Failed to import video process API")
     video_process_router = None
 
+# Import WebSocket routes
+try:
+    from ws_realtime.routes import websocket_router
+except ImportError:
+    # Fallback if import fails
+    logging.warning("Failed to import WebSocket routes")
+    websocket_router = None
+
 # Configure global logging for the entire application (including Uvicorn)
 logging.basicConfig(
     level=logging.INFO, 
@@ -95,6 +99,25 @@ if media_router:
 if video_process_router:
     app.include_router(video_process_router)
     logger.info("Video process API routes added")
+
+# Include WebSocket router if available  
+if websocket_router:
+    app.include_router(websocket_router)
+    logger.info("WebSocket routes added")
+
+# Add simple WebSocket endpoints directly
+from ws_realtime.simple_manager import connect_websocket, disconnect_websocket, send_video_update
+
+@app.websocket("/ws/video-process")
+async def websocket_video_process(websocket: WebSocket, user_id: str = "demo_user"):
+    """Simple WebSocket endpoint for video process updates"""
+    await connect_websocket(websocket, user_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logger.info(f"WebSocket received from {user_id}: {data}")
+    except WebSocketDisconnect:
+        disconnect_websocket(websocket, user_id)
 
 # Configure CORS middleware
 app.add_middleware(

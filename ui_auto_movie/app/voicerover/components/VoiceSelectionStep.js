@@ -14,8 +14,108 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { getVoiceovers } from '@/lib/voiceovers';
 
 const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
+  const [previousVoiceovers, setPreviousVoiceovers] = useState([]);
+  useEffect(() => {
+    const fetchPreviousVoiceovers = async () => {
+      try {
+        const domainName = window.location.origin;
+        const data = await getVoiceovers({ userId: "97541aed-574c-4206-bcd4-b41a752a24d5", scriptId: "fcf0b20b-317d-44dc-8875-933b50c9345a" });
+        setPreviousVoiceovers(Array.isArray(data.voiceovers) ? data.voiceovers : []);
+      } catch (error) {
+        console.error('Failed to fetch previous voiceovers:', error);
+        setPreviousVoiceovers(dummyData); 
+
+      }
+    };
+    fetchPreviousVoiceovers();
+  }, [userId]);
+
+  // State for stylish audio player in table
+  const [playingRowId, setPlayingRowId] = useState(null);
+  const [rowVolumes, setRowVolumes] = useState({}); // { [id]: volume }
+  const rowAudioRefs = useRef({});
+
+  // --- Audio Player Row Component ---
+  const AudioPlayerRow = ({ vo }) => {
+    const audioRef = useRef(null);
+    // Sync ref with parent
+    useEffect(() => { rowAudioRefs.current[vo.id] = audioRef.current; }, [audioRef, vo.id]);
+
+    const playPause = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (playingRowId === vo.id) {
+        audio.pause();
+        setPlayingRowId(null);
+      } else {
+        Object.entries(rowAudioRefs.current).forEach(([id, a]) => { if (a && id !== vo.id) a.pause(); });
+        audio.currentTime = 0;
+        audio.play();
+        setPlayingRowId(vo.id);
+      }
+    };
+    const setVolume = (value) => {
+      if (audioRef.current) audioRef.current.volume = value;
+      setRowVolumes(prev => ({ ...prev, [vo.id]: value }));
+    };
+    const seek = (direction) => {
+      const audio = audioRef.current;
+      if (audio) {
+        if (direction === 'back') audio.currentTime = Math.max(0, audio.currentTime - 5);
+        else if (direction === 'forward') audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5);
+      }
+    };
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          className="rounded-full p-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 focus:outline-none"
+          onClick={() => seek('back')}
+          aria-label="Back 5 seconds"
+          tabIndex={0}
+        >
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M11 18V6M11 6l-3 3M11 6l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <button
+          className={`rounded-full p-2 border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400
+            ${playingRowId === vo.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg scale-110' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900'}
+          `}
+          onClick={playPause}
+          aria-label={playingRowId === vo.id ? 'Pause' : 'Play'}
+        >
+          {playingRowId === vo.id ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+        </button>
+        <button
+          className="rounded-full p-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 focus:outline-none"
+          onClick={() => seek('forward')}
+          aria-label="Forward 5 seconds"
+          tabIndex={0}
+        >
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 6v12M13 6l3 3M13 6l-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={rowVolumes[vo.id] !== undefined ? rowVolumes[vo.id] : 1}
+          onChange={e => setVolume(parseFloat(e.target.value))}
+          className="ml-2 w-20 accent-blue-500"
+          aria-label="Volume"
+        />
+        <audio
+          ref={audioRef}
+          src={vo.audio_url}
+          preload="metadata"
+          onEnded={() => setPlayingRowId(null)}
+          style={{ display: 'none' }}
+        />
+      </div>
+    );
+  };
+
   // Debug logging for scriptData
   console.log('VoiceSelectionStep - Received scriptData:', scriptData);
   console.log('VoiceSelectionStep - scriptData type:', typeof scriptData);
@@ -554,6 +654,46 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Previous Voiceovers Table Section */}
+      {previousVoiceovers.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Previous Voiceovers (Demo)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                <thead className="bg-gray-100 dark:bg-gray-800">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Voice</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Date</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Speed</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Pitch</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Volume</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Audio</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
+                  {previousVoiceovers.map(vo => (
+                    <tr key={vo.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{vo.voice_name}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{new Date(vo.created_at).toLocaleString()}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{vo?.speed}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{vo?.pitch}</td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{vo?.volume}</td>
+                      <td className="px-4 py-2">
+                        {/* Stylish audio player */}
+                        <AudioPlayerRow vo={vo} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Voice Selection */}

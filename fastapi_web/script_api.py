@@ -7,16 +7,25 @@ from pydantic import BaseModel
 import json
 from datetime import datetime
 
+# Import WebSocket manager for real-time updates
+try:
+    from ws_realtime.simple_manager import send_video_update
+    async def notify_video_process_update(user_id, process_data):
+        await send_video_update(user_id, process_data)
+except ImportError:
+    # Fallback if WebSocket not available
+    async def notify_video_process_update(*args): pass
+
 router = APIRouter(prefix="/api/scripts", tags=["scripts"])
 
 # Helper function to get video process status for a script  
 def get_video_process_status(session: Session, user_id: str) -> Optional['VideoProcessStatus']:
     """Get the current active video process status for a user"""
     try:
-        # Get the most recent active process for the user
+        # Get the most recent process for the user (active, completed, or failed)
         process_query = select(VideoGenerationProcess).where(
             VideoGenerationProcess.user_id == user_id,
-            VideoGenerationProcess.status == "active"
+            VideoGenerationProcess.status.in_(["active", "completed", "failed"])
         ).order_by(VideoGenerationProcess.started_at.desc())
         
         process = session.exec(process_query).first()
@@ -181,6 +190,13 @@ async def get_scripts(
             
             # Get video process status for this user
             video_process = get_video_process_status(session, script.user_id)
+            
+            # Send WebSocket update if video process is active
+            if video_process and video_process.status == 'active':
+                import asyncio
+                try:
+                    asyncio.create_task(notify_video_process_update(script.user_id, video_process.dict()))
+                except: pass
             
             script_responses.append(ScriptResponse(
                 id=script.id,

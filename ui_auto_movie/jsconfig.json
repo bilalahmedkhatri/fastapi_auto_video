@@ -9,6 +9,7 @@
       "@/utils/*": ["utils/*"],
       "@/lib/*": ["lib/*"],
       "@/stores/*": ["stores/*"],
+      "@/ws_realtime/*": ["ws_realtime/*"]
     }
   }
 }

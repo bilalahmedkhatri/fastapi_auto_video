@@ -1,8 +1,9 @@
 // Custom hooks for script management
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchScripts } from '../utils/api';
+import { useVideoWebSocket } from '@/ws_realtime/useVideoWebSocket';
 
 // Hook for managing script data with filters, search, and pagination
 export const useScripts = (initialFilters = {}) => {
@@ -35,8 +36,7 @@ export const useScripts = (initialFilters = {}) => {
         sortBy,
         filterBy,
         searchQuery,
-        userId: null // Temporarily remove user filtering to see all scripts
-        // userId: user?.id || null // Pass user ID to filter scripts by user
+        userId: user?.id || null // Pass authenticated user ID for proper mapping
       });
       
       console.log('Scripts loaded:', result); // Debug log
@@ -70,25 +70,17 @@ export const useScripts = (initialFilters = {}) => {
     }
   }, [loadScripts, isLoading]);
 
-  // Auto-refresh when there are active video processes
-  useEffect(() => {
-    const hasActiveProcesses = scripts.some(script => 
-      script.video_process?.status === 'active'
+  // WebSocket for real-time video process updates
+  useVideoWebSocket(user?.id || 'demo_user', (processData) => {
+    console.log('🔄 Received video process update:', processData);
+    setScripts(prevScripts => 
+      prevScripts.map(script => 
+        script.user_id === user?.id 
+          ? { ...script, video_process: processData }
+          : script
+      )
     );
-    
-    if (hasActiveProcesses) {
-      console.log('Active video processes detected, setting up auto-refresh...');
-      const interval = setInterval(() => {
-        console.log('Auto-refreshing scripts due to active video processes...');
-        loadScripts();
-      }, 3000); // Refresh every 3 seconds
-      
-      return () => {
-        console.log('Clearing auto-refresh interval');
-        clearInterval(interval);
-      };
-    }
-  }, [scripts, loadScripts]);
+  });
 
   // Reset to first page when filters change (except pagination)
   useEffect(() => {

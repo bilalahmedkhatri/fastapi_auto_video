@@ -13,7 +13,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 # Import database and Celery tasks
 from models.db_models import get_session
@@ -240,6 +240,28 @@ async def start_batch_processing(request: BatchProcessingRequest):
         estimated_seconds = len(media_items) * 30  # ~30 seconds per item
         estimated_completion = datetime.now().timestamp() + estimated_seconds
         
+        # Minimal update: mark 'media' step as completed in VideoGenerationProcess if active
+        try:
+            from models.db_models import VideoGenerationProcess
+            from models.video_process_manager import VideoGenerationProcessManager
+            if request.user_id and VideoGenerationProcess:
+                process_query = select(VideoGenerationProcess).where(
+                    VideoGenerationProcess.user_id == request.user_id,
+                    VideoGenerationProcess.status == "active"
+                ).order_by(VideoGenerationProcess.started_at.desc())
+                session = next(get_session())
+                active_process = session.exec(process_query).first()
+                if active_process:
+                    manager = VideoGenerationProcessManager(session)
+                    if manager.load_process(active_process.id):
+                        manager.update_step_progress(
+                            step_name="media",
+                            status="completed",
+                            data={"media_count": len(media_items) if 'media_items' in locals() else 1}
+                        )
+        except Exception as step_error:
+            logger.warning(f"Failed to update process step for media: {step_error}")
+        
         return ProcessingResponse(
             task_id=task.id,
             status="started",
@@ -269,6 +291,28 @@ async def start_single_processing(media_item: MediaItem, user_id: Optional[str] 
     try:
         # Start Celery task
         task = process_single_media.delay(media_item.dict(), user_id)
+        
+        # Minimal update: mark 'media' step as completed in VideoGenerationProcess if active
+        try:
+            from models.db_models import VideoGenerationProcess
+            from models.video_process_manager import VideoGenerationProcessManager
+            if user_id and VideoGenerationProcess:
+                process_query = select(VideoGenerationProcess).where(
+                    VideoGenerationProcess.user_id == user_id,
+                    VideoGenerationProcess.status == "active"
+                ).order_by(VideoGenerationProcess.started_at.desc())
+                session = next(get_session())
+                active_process = session.exec(process_query).first()
+                if active_process:
+                    manager = VideoGenerationProcessManager(session)
+                    if manager.load_process(active_process.id):
+                        manager.update_step_progress(
+                            step_name="media",
+                            status="completed",
+                            data={"media_count": 1}
+                        )
+        except Exception as step_error:
+            logger.warning(f"Failed to update process step for media: {step_error}")
         
         return ProcessingResponse(
             task_id=task.id,

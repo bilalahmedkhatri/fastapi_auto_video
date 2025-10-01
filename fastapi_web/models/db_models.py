@@ -170,6 +170,7 @@ class Video(SQLModel, table=True):
 
 class DownloadImages(SQLModel, table=True):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    user_id: int
     video_id: str  # Foreign key to Video table
     image_url: str
     created_at: datetime = Field(default_factory=datetime.now)
@@ -301,7 +302,7 @@ class MediaSequence(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     # User info
-    user_id: Optional[str] = None
+    user_id: Optional[str] = None   
     session_id: Optional[str] = None
 
 
@@ -310,6 +311,8 @@ class ScriptGeneration(SQLModel, table=True):
     """Table to store generated scripts"""
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     user_id: str  # User who generated the script
+    step_process_id: int = Field(foreign_key="videoprocessstep.id")
+    step: "VideoProcessStep" = Relationship(back_populates="scripts")
     user_prompt: str  # Original user prompt
     script_type: str  # short, medium, long, etc.
     category: str  # General, Technology, etc.
@@ -352,7 +355,7 @@ class SocialMediaContent(SQLModel, table=True):
 class GeneratedVoiceover(SQLModel, table=True):
     """Table to store generated voiceover files and metadata"""
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
-    user_id: str  # User who generated the voiceover
+    user_id: int # User who generated the voiceover
     script_id: Optional[str] = None  # Reference to ScriptGeneration if available
     video_id: Optional[str] = None  # Reference to Video if part of video generation
     
@@ -422,12 +425,61 @@ class AIModel(SQLModel, table=True):
 
 # Create all tables
 def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+    """
+    Create all tables and run auto-migration to add missing columns.
+    This function will:
+    1. Create new tables based on SQLModel definitions
+    2. Automatically detect and add missing columns to existing tables
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Step 1: Create new tables (this won't modify existing tables)
+        SQLModel.metadata.create_all(engine)
+        logger.info("✅ Table creation completed")
+        
+        # Step 2: Run auto-migration for missing columns
+        from .auto_migration import run_auto_migration
+        migration_result = run_auto_migration(engine)
+        
+        # Log migration results
+        if migration_result['total_columns_added'] > 0:
+            logger.info(f"✅ Auto-migration completed: {migration_result['total_columns_added']} columns added")
+        else:
+            logger.info("ℹ️  No schema migrations needed")
+            
+        return migration_result
+        
+    except ImportError as e:
+        logger.warning(f"⚠️  Auto-migration not available: {e}")
+        logger.info("ℹ️  Only basic table creation performed")
+        return None
+    except Exception as e:
+        logger.error(f"❌ Error during database setup: {e}")
+        # Don't fail startup on migration errors
+        return None
 
 # Get database session
 def get_session():
     with Session(engine) as session:
         yield session
+
+# --- Helper functions for User Info (Prisma User Table) ---
+
+def get_user_by_id(user_id: str):
+    """
+    Fetch user info from the Prisma-managed 'user' table by user_id.
+    Returns a dict with user fields, or None if not found.
+    """
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        result = conn.execute(text('SELECT * FROM "user" WHERE id = :id'), {"id": user_id})
+        row = result.fetchone()
+        if row:
+            # Convert SQLAlchemy Row to dict
+            return dict(row._mapping)
+        return None
 
 # Helper functions for AI Voices
 def get_local_voice_sample_url(voice_id: str, base_url: str = "http://localhost:8000") -> str:
@@ -749,6 +801,7 @@ class VideoProcessStep(SQLModel, table=True):
     
     # Process relationship
     process_id: int = Field(foreign_key="videogenerationprocess.id")
+    scripts: List["ScriptGeneration"] = Relationship(back_populates="step")
     
     # Step identification
     step_name: str  # input, loading, scripts, editing, voiceover, social-media, media, video-effects

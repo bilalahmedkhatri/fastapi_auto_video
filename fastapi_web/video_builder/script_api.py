@@ -9,12 +9,13 @@ from sqlmodel import Session, select
 
 # Import database models and session
 try:
-    from models.db_models import ScriptGeneration, SocialMediaContent, get_session
+    from models.db_models import ScriptGeneration, SocialMediaContent, VideoGenerationProcess, VideoProcessStep, get_session
 except ImportError:
     # Fallback if import fails
     logging.warning("Failed to import database models")
     ScriptGeneration = None
     SocialMediaContent = None
+    VideoGenerationProcess = None
     get_session = None
 
 # Import AI text generation API
@@ -553,6 +554,26 @@ async def generate_social_media_content_endpoint(request: SocialMediaRequest, db
                 logging.error(f"Failed to save social media content to database: {str(db_error)}")
                 # Continue without saving to database
         
+        # Minimal update: mark 'social-media' step as completed in VideoGenerationProcess if active
+        try:
+            if VideoGenerationProcess:
+                from models.video_process_manager import VideoGenerationProcessManager
+                process_query = select(VideoGenerationProcess).where(
+                    VideoGenerationProcess.user_id == request.user_id,
+                    VideoGenerationProcess.status == "active"
+                ).order_by(VideoGenerationProcess.started_at.desc())
+                active_process = db.exec(process_query).first()
+                if active_process:
+                    manager = VideoGenerationProcessManager(db)
+                    if manager.load_process(active_process.id):
+                        manager.update_step_progress(
+                            step_name="social-media",
+                            status="completed",
+                            data={"platforms": request.platforms}
+                        )
+        except Exception as step_error:
+            logging.warning(f"Failed to update process step for social-media: {step_error}")
+        
         return response
         
     except Exception as e:
@@ -577,7 +598,7 @@ async def generate_scripts(request: ScriptGenerationRequest, db: Session = Depen
     """Generate scripts using AI API and save to database"""
     
     print(f"Generating scripts with AI for: {request.user_prompt}")
-    logging.info(f"Generating scripts for user {request.user_id} with prompt: {request.user_prompt}")
+    logging.info(f"Generating scripts for user {request.user_id} with request: {request}")
     
     try:
         # Check if database connection is available
@@ -616,6 +637,25 @@ async def generate_scripts(request: ScriptGenerationRequest, db: Session = Depen
         
         # Save scripts to database instead of memory
         saved_scripts = []
+        # Find the correct VideoProcessStep for "scripts" step of the active process
+        step_process_id = None
+        try:
+            process_query = select(VideoGenerationProcess).where(
+                VideoGenerationProcess.user_id == request.user_id,
+                VideoGenerationProcess.status == "active"
+            ).order_by(VideoGenerationProcess.started_at.desc())
+            active_process = db.exec(process_query).first()
+            if active_process:
+                step_query = select(VideoProcessStep).where(
+                    VideoProcessStep.process_id == active_process.id,
+                    VideoProcessStep.step_name == "scripts"
+                )
+                step = db.exec(step_query).first()
+                if step:
+                    step_process_id = step.id
+        except Exception as e:
+            logging.warning(f"Could not find VideoProcessStep for scripts: {e}")
+
         for script in generated_scripts:
             try:
                 # Create database record
@@ -632,14 +672,13 @@ async def generate_scripts(request: ScriptGenerationRequest, db: Session = Depen
                     duration_estimate=script.duration_estimate,
                     word_count=script.word_count,
                     generation_duration_ms=generation_duration_ms,
-                    ai_model_used="TextGenAPI"
+                    ai_model_used="TextGenAPI",
+                    step_process_id=step_process_id
                 )
-                
                 # Save to database
                 db.add(db_script)
                 db.commit()
                 db.refresh(db_script)
-                
                 # Add database ID to script response
                 script_with_id = ScriptOptionResponse(
                     id=db_script.id,
@@ -653,7 +692,6 @@ async def generate_scripts(request: ScriptGenerationRequest, db: Session = Depen
                     duration_estimate=script.duration_estimate,
                     word_count=script.word_count
                 )
-                
                 saved_scripts.append(script_with_id)
                 logging.info(f"Script saved to database with ID: {db_script.id}")
                 
@@ -671,6 +709,28 @@ async def generate_scripts(request: ScriptGenerationRequest, db: Session = Depen
             )
         
         logging.info(f"Successfully generated and saved {len(saved_scripts)} scripts for user {request.user_id}")
+        
+        # Update video process step if user has an active process
+        try:
+            if VideoGenerationProcess:
+                from models.video_process_manager import VideoGenerationProcessManager
+                # Get the most recent active process for this user
+                process_query = select(VideoGenerationProcess).where(
+                    VideoGenerationProcess.user_id == request.user_id,
+                    VideoGenerationProcess.status == "active"
+                ).order_by(VideoGenerationProcess.started_at.desc())
+                
+                active_process = db.exec(process_query).first()
+                if active_process:
+                    manager = VideoGenerationProcessManager(db)
+                    if manager.load_process(active_process.id):
+                        manager.update_step_progress(
+                            step_name="scripts",
+                            status="completed",
+                            data={"scripts_count": len(saved_scripts), "generation_duration_ms": generation_duration_ms}
+                        )
+        except Exception as step_error:
+            logging.warning(f"Failed to update process step: {step_error}")
         
         return ScriptGenerationResponse(
             success=True,

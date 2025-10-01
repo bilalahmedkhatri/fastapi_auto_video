@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Tab Change Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .log { background-color: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 WebSocket Tab Change Test</h1>
+    
+    <div id="status" class="status disconnected">
+        ❌ Not Connected
+    </div>
+    
+    <div>
+        <button onclick="connect()">🔗 Connect</button>
+        <button onclick="disconnect()">🔌 Disconnect</button>
+        <button onclick="clearLog()">🧹 Clear Log</button>
+    </div>
+    
+    <h3>Instructions:</h3>
+    <ol>
+        <li>Click "Connect" to start WebSocket connection</li>
+        <li>Switch to another tab/window</li>
+        <li>Come back to this tab</li>
+        <li>Check if connection properly disconnected and reconnected</li>
+    </ol>
+    
+    <h3>Connection Log:</h3>
+    <div id="log" class="log"></div>
+
+    <script>
+        let ws = null;
+        let connectionCount = 0;
+        
+        function log(message) {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}<br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(connected, message) {
+            const statusEl = document.getElementById('status');
+            if (connected) {
+                statusEl.className = 'status connected';
+                statusEl.textContent = `✅ ${message}`;
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.textContent = `❌ ${message}`;
+            }
+        }
+        
+        function connect() {
+            if (ws && ws.readyState !== WebSocket.CLOSED) {
+                log('⚠️ Already connected');
+                return;
+            }
+            
+            connectionCount++;
+            log(`🔗 Attempting connection #${connectionCount}...`);
+            
+            try {
+                ws = new WebSocket('ws://localhost:8000/ws/video-process?user_id=test_user');
+                
+                ws.onopen = () => {
+                    log('✅ WebSocket connected successfully');
+                    updateStatus(true, 'Connected');
+                };
+                
+                ws.onclose = (event) => {
+                    log(`🔌 WebSocket disconnected (code: ${event.code})`);
+                    updateStatus(false, 'Disconnected');
+                };
+                
+                ws.onerror = (error) => {
+                    log('❌ WebSocket error: ' + error);
+                    updateStatus(false, 'Error');
+                };
+                
+                ws.onmessage = (event) => {
+                    log('📩 Received: ' + event.data);
+                };
+                
+            } catch (error) {
+                log('❌ Connection failed: ' + error.message);
+                updateStatus(false, 'Failed to connect');
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                log('🔌 Manually disconnecting...');
+                ws.close();
+            } else {
+                log('⚠️ No active connection');
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // Monitor page visibility
+        document.addEventListener('visibilitychange', () => {
+            const status = document.hidden ? 'HIDDEN' : 'VISIBLE';
+            log(`👁️ Page visibility: ${status}`);
+            
+            if (document.hidden && ws && ws.readyState === WebSocket.OPEN) {
+                log('📱 Tab hidden - should disconnect WebSocket');
+            } else if (!document.hidden && ws && ws.readyState === WebSocket.CLOSED) {
+                log('📱 Tab visible - should reconnect WebSocket');
+            }
+        });
+        
+        // Monitor page unload
+        window.addEventListener('beforeunload', () => {
+            log('🚪 Page unloading...');
+            if (ws) {
+                ws.close();
+            }
+        });
+        
+        log('🚀 Test page loaded. Click Connect to start testing.');
+    </script>
+</body>
+</html>
