@@ -440,7 +440,9 @@ export default function GeneratedVoiceoversPage() {
     if (audioRef.current) {
       audioRef.current.pause();
       setCurrentlyPlaying(null);
-      toast.info('Audio paused');
+      toast('Audio paused', {
+        icon: 'ℹ️'
+      });
     }
   };
 

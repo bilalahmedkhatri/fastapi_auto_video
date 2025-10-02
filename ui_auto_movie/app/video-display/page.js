@@ -104,12 +104,16 @@ const VideoDisplayPage = () => {
   };
 
   const handleRegenerateVideo = () => {
-    toast.info('Redirecting to regenerate video...');
+    toast('Redirecting to regenerate video...', {
+      icon: 'ℹ️'
+    });
     console.log('Regenerate video:', videoData?.id || videoId);
   };
 
   const handleBackToBuilder = () => {
-    toast.info('Returning to video builder...');
+    toast('Returning to video builder...', {
+      icon: 'ℹ️'
+    });
   };
 
   if (loading) {

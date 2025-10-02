@@ -137,16 +137,67 @@ export const useVideoStatusPolling = () => {
       if (data.stage === 'failed' || data.error) {
         stopPolling();
         const errorMessage = data.error || 'Video generation failed';
-        toast.error(`❌ ${errorMessage}`);
+        
+        // Provide more helpful error messages based on error type
+        let userFriendlyMessage = errorMessage;
+        let troubleshootingTips = '';
+        
+        if (errorMessage.includes('No valid image clips could be created')) {
+          userFriendlyMessage = 'Failed to create video clips from images';
+          troubleshootingTips = 'This usually means:\n' +
+            '• No suitable images were found for the selected media\n' +
+            '• Try selecting different media items\n' +
+            '• Ensure images are properly formatted and accessible\n' +
+            '• Check if media URLs are valid';
+          
+          console.error('❌ Image clip creation failed:', {
+            error: errorMessage,
+            troubleshooting: troubleshootingTips,
+            suggestion: 'Go back to Media Manager and select different images'
+          });
+        } else if (errorMessage.includes('timeout')) {
+          userFriendlyMessage = 'Video generation timed out';
+          troubleshootingTips = 'The process took too long. Try with:\n' +
+            '• Fewer media items\n' +
+            '• Shorter script\n' +
+            '• Simpler effects';
+        } else if (errorMessage.includes('memory') || errorMessage.includes('RAM')) {
+          userFriendlyMessage = 'Server ran out of memory';
+          troubleshootingTips = 'Try reducing:\n' +
+            '• Number of media items\n' +
+            '• Video quality settings\n' +
+            '• Effect complexity';
+        }
+        
+        // Show error with toast
+        toast.error(`❌ ${userFriendlyMessage}`, {
+          duration: 6000,
+        });
+        
+        // Log detailed error for debugging
+        console.error('🚨 Video Generation Error:', {
+          originalError: errorMessage,
+          userMessage: userFriendlyMessage,
+          troubleshooting: troubleshootingTips,
+          stage: data.stage,
+          videoId: data.video_id || data.videoId
+        });
         
         setStatus(prev => ({
           ...prev,
           isActive: false,
-          error: errorMessage
+          error: userFriendlyMessage,
+          errorDetails: {
+            original: errorMessage,
+            troubleshooting: troubleshootingTips
+          }
         }));
 
         if (onErrorRef.current) {
-          onErrorRef.current(new Error(errorMessage));
+          const error = new Error(userFriendlyMessage);
+          error.originalError = errorMessage;
+          error.troubleshooting = troubleshootingTips;
+          onErrorRef.current(error);
         }
         return;
       }

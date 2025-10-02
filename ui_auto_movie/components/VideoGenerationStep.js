@@ -332,7 +332,9 @@ const VideoGenerationStep = ({
   const handleCancelProcessing = () => {
     setShowProcessingScreen(false);
     setIsGenerating(false);
-    toast.info('Returned to video builder. Generation continues in background.');
+    toast('Returned to video builder. Generation continues in background.', {
+      icon: 'ℹ️'
+    });
   };
 
   // Track progress using specific status endpoint

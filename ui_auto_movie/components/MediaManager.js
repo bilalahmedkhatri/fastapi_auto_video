@@ -433,7 +433,9 @@ const MediaManager = ({
 
   const removeTag = (tagToRemove) => {
     setSearchTags(searchTags.filter(tag => tag !== tagToRemove));
-    toast.info(`Removed tag: ${tagToRemove}`);
+    toast(`Removed tag: ${tagToRemove}`, {
+      icon: 'ℹ️'
+    });
   };
 
   const addCustomKeyword = () => {
@@ -446,7 +448,9 @@ const MediaManager = ({
 
   const removeKeyword = (keywordToRemove) => {
     setSearchKeywords(searchKeywords.filter(keyword => keyword !== keywordToRemove));
-    toast.info(`Removed keyword: ${keywordToRemove}`);
+    toast(`Removed keyword: ${keywordToRemove}`, {
+      icon: 'ℹ️'
+    });
   };
 
   // Handle media search

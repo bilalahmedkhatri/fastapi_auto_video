@@ -72,24 +72,6 @@ const GeneratedScriptsPage = () => {
 	// Handle new script creation
 	const handleNewScript = () => {
 		console.log('🆕 New Script button clicked - starting fresh process');
-		
-		// Clear all localStorage items immediately
-		try {
-			localStorage.removeItem('video-builder-storage');
-			localStorage.removeItem('generatedVoiceoverData');
-			localStorage.removeItem('videoBuilderState');
-			localStorage.removeItem('projectData');
-			
-			// Clear process states
-			const processStateKey = 'video_builder_process_states';
-			localStorage.removeItem(processStateKey);
-			
-			console.log('✅ All localStorage cleared');
-		} catch (error) {
-			console.error('❌ Error clearing localStorage:', error);
-		}
-		
-		// Navigate with fresh flag
 		router.push('/video-builder?fresh=true');
 	};
 

@@ -15,106 +15,77 @@ import {
   SelectValue,
 } from './ui/select';
 import { getVoiceovers } from '@/lib/voiceovers';
+import LocalStorageManager from '@/lib/localStorageManager';
 
 const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
+  // Initialize LocalStorageManager for voiceover workflow tracking
+  const voiceoverWorkflowManager = useRef(new LocalStorageManager('voiceoverWorkflow')).current;
   const [previousVoiceovers, setPreviousVoiceovers] = useState([]);
+  const [selectedPreviousVoiceover, setSelectedPreviousVoiceover] = useState(null);
+  
+  // Fetch previous voiceovers from backend and localStorage
   useEffect(() => {
     const fetchPreviousVoiceovers = async () => {
+      // First, try to load from localStorage
+      const localVoiceovers = voiceoverWorkflowManager.getAll();
+      console.log('📦 Loading voiceovers from localStorage:', localVoiceovers);
+      
+      // Filter and format localStorage voiceovers for display
+      const formattedLocalVoiceovers = localVoiceovers
+        .filter(vo => vo && vo.status === 'completed' && vo.audioUrl)
+        .map(vo => ({
+          id: vo.id,
+          voice_name: vo.voiceName || vo.voice_name || 'Unknown Voice',
+          voice_id: vo.voiceId || vo.voice_id,
+          created_at: vo.completedAt || vo.created_at || new Date().toISOString(),
+          speed: vo.speed || 1.0,
+          pitch: vo.pitch || 1.0,
+          volume: vo.volume || 0.8,
+          audio_url: vo.audioUrl || vo.audio_url,
+          generation_time: vo.generationTime || vo.generation_time,
+          user_id: vo.userId || vo.user_id,
+          script_id: vo.scriptId || vo.script_id
+        }));
+      
+      // Set localStorage voiceovers first (for immediate display)
+      if (formattedLocalVoiceovers.length > 0) {
+        setPreviousVoiceovers(formattedLocalVoiceovers);
+        console.log('✅ Loaded', formattedLocalVoiceovers.length, 'voiceovers from localStorage');
+      }
+      
+      // Then try to fetch from backend API (optional enhancement)
       try {
-        const domainName = window.location.origin;
-        const data = await getVoiceovers({ userId: "97541aed-574c-4206-bcd4-b41a752a24d5", scriptId: "fcf0b20b-317d-44dc-8875-933b50c9345a" });
-        setPreviousVoiceovers(Array.isArray(data.voiceovers) ? data.voiceovers : []);
+        if (userId && scriptData?.id) {
+          const data = await getVoiceovers({ 
+            userId: userId, 
+            scriptId: scriptData.id 
+          });
+          
+          if (data && Array.isArray(data.voiceovers) && data.voiceovers.length > 0) {
+            // Merge backend data with localStorage data (avoid duplicates)
+            const backendIds = new Set(data.voiceovers.map(vo => vo.id));
+            const uniqueLocalVoiceovers = formattedLocalVoiceovers.filter(vo => !backendIds.has(vo.id));
+            const mergedVoiceovers = [...data.voiceovers, ...uniqueLocalVoiceovers];
+            
+            setPreviousVoiceovers(mergedVoiceovers);
+            console.log('✅ Merged backend and localStorage voiceovers:', mergedVoiceovers.length, 'total');
+          }
+        }
       } catch (error) {
-        console.error('Failed to fetch previous voiceovers:', error);
-        setPreviousVoiceovers(dummyData); 
-
+        console.warn('⚠️ Failed to fetch from backend API, using localStorage only:', error.message);
+        // Keep using localStorage data, don't clear it
       }
     };
+    
     fetchPreviousVoiceovers();
-  }, [userId]);
+  }, [userId, scriptData?.id]);
 
-  // State for stylish audio player in table
-  const [playingRowId, setPlayingRowId] = useState(null);
-  const [rowVolumes, setRowVolumes] = useState({}); // { [id]: volume }
-  const rowAudioRefs = useRef({});
-
-  // --- Audio Player Row Component ---
-  const AudioPlayerRow = ({ vo }) => {
-    const audioRef = useRef(null);
-    // Sync ref with parent
-    useEffect(() => { rowAudioRefs.current[vo.id] = audioRef.current; }, [audioRef, vo.id]);
-
-    const playPause = () => {
-      const audio = audioRef.current;
-      if (!audio) return;
-      if (playingRowId === vo.id) {
-        audio.pause();
-        setPlayingRowId(null);
-      } else {
-        Object.entries(rowAudioRefs.current).forEach(([id, a]) => { if (a && id !== vo.id) a.pause(); });
-        audio.currentTime = 0;
-        audio.play();
-        setPlayingRowId(vo.id);
-      }
-    };
-    const setVolume = (value) => {
-      if (audioRef.current) audioRef.current.volume = value;
-      setRowVolumes(prev => ({ ...prev, [vo.id]: value }));
-    };
-    const seek = (direction) => {
-      const audio = audioRef.current;
-      if (audio) {
-        if (direction === 'back') audio.currentTime = Math.max(0, audio.currentTime - 5);
-        else if (direction === 'forward') audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5);
-      }
-    };
-    return (
-      <div className="flex items-center gap-2">
-        <button
-          className="rounded-full p-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 focus:outline-none"
-          onClick={() => seek('back')}
-          aria-label="Back 5 seconds"
-          tabIndex={0}
-        >
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M11 18V6M11 6l-3 3M11 6l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-        <button
-          className={`rounded-full p-2 border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400
-            ${playingRowId === vo.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg scale-110' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900'}
-          `}
-          onClick={playPause}
-          aria-label={playingRowId === vo.id ? 'Pause' : 'Play'}
-        >
-          {playingRowId === vo.id ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-        </button>
-        <button
-          className="rounded-full p-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 focus:outline-none"
-          onClick={() => seek('forward')}
-          aria-label="Forward 5 seconds"
-          tabIndex={0}
-        >
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 6v12M13 6l3 3M13 6l-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={rowVolumes[vo.id] !== undefined ? rowVolumes[vo.id] : 1}
-          onChange={e => setVolume(parseFloat(e.target.value))}
-          className="ml-2 w-20 accent-blue-500"
-          aria-label="Volume"
-        />
-        <audio
-          ref={audioRef}
-          src={vo.audio_url}
-          preload="metadata"
-          onEnded={() => setPlayingRowId(null)}
-          style={{ display: 'none' }}
-        />
-      </div>
-    );
-  };
+  // Log localStorage workflow data on component mount and when it changes
+  useEffect(() => {
+    const workflowData = voiceoverWorkflowManager.getAll();
+    console.log('📦 Voiceover Workflow LocalStorage Data:', workflowData);
+    console.log('📊 Total voiceover records in localStorage:', workflowData.length);
+  }, [voiceoverWorkflowManager]);
 
   // Debug logging for scriptData
   console.log('VoiceSelectionStep - Received scriptData:', scriptData);
@@ -458,11 +429,57 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
         };
         
         setGeneratedAudio(generatedAudioData);
+        
+        // Add the newly generated voiceover to the previous voiceovers list
+        const voiceoverId = result.id || result.voiceover_id || `vo_${Date.now()}`;
+        const newVoiceoverEntry = {
+          id: voiceoverId,
+          voice_name: selectedVoice.name || selectedVoice.voice_id,
+          voice_id: selectedVoice.voice_id,
+          created_at: new Date().toISOString(),
+          speed: apiAudioSettings.speed,
+          pitch: apiAudioSettings.pitch,
+          volume: apiAudioSettings.volume,
+          audio_url: audioUrl,
+          generation_time: result.generation_time,
+          user_id: userId,
+          script_id: scriptData.id || scriptData.script_id
+        };
+        
+        // Store in localStorage for persistence
+        try {
+          await voiceoverWorkflowManager.create({
+            id: voiceoverId,
+            voiceName: newVoiceoverEntry.voice_name,
+            voiceId: newVoiceoverEntry.voice_id,
+            completedAt: newVoiceoverEntry.created_at,
+            speed: newVoiceoverEntry.speed,
+            pitch: newVoiceoverEntry.pitch,
+            volume: newVoiceoverEntry.volume,
+            audioUrl: newVoiceoverEntry.audio_url,
+            generationTime: newVoiceoverEntry.generation_time,
+            userId: newVoiceoverEntry.user_id,
+            scriptId: newVoiceoverEntry.script_id,
+            status: 'completed',
+            step: 'voiceover_generated'
+          });
+          console.log('💾 Saved voiceover to localStorage with ID:', voiceoverId);
+        } catch (storageError) {
+          console.warn('⚠️ Failed to save to localStorage:', storageError.message);
+          // Continue anyway, just log the error
+        }
+        
+        // Add to the beginning of the list (most recent first)
+        setPreviousVoiceovers(prev => [newVoiceoverEntry, ...prev]);
+        
+        console.log('✅ Added new voiceover to Previous Voiceovers list:', newVoiceoverEntry);
+        
         toast({
           title: "Success",
           description: `Audio generated in ${result.generation_time?.toFixed(2)}s`,
           variant: "success"
         });
+      
       } else {
         console.error('No audio URL found in response. Available fields:', Object.keys(result));
         console.error('Full response:', result);
@@ -565,7 +582,7 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
   };
 
   // Handle next step
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!generatedAudio) {
       toast({
         title: "No Audio Generated",
@@ -596,6 +613,49 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
       generated_audio: generatedAudio,
       script_data: enhancedScriptData
     };
+
+    // Update localStorage to mark voiceover step as completed
+    try {
+      // Extract voiceover ID from the generatedAudio object (which came from backend response)
+      const voiceoverId = generatedAudio.id || generatedAudio.voiceover_id || generatedAudio.generated_voiceover_id;
+      
+      console.log('🔑 Attempting to update voiceover with ID:', voiceoverId);
+      console.log('📦 Generated audio object:', generatedAudio);
+      
+      if (!voiceoverId) {
+        console.warn('⚠️ No voiceover ID found in generatedAudio object. Cannot update localStorage.');
+        console.log('Available fields in generatedAudio:', Object.keys(generatedAudio));
+      } else {
+        // Try to update existing record, or create new one if it doesn't exist
+        try {
+          await voiceoverWorkflowManager.update(voiceoverId, {
+            step: 'voiceover_completed',
+            completedAt: new Date().toISOString(),
+            proceedingToNextStep: true,
+            status: 'completed'
+          });
+          console.log('✅ Updated voiceover workflow status to completed for ID:', voiceoverId);
+        } catch (updateError) {
+          console.warn('⚠️ Update failed, attempting to create new record:', updateError.message);
+          // If update fails (record doesn't exist), create new record with the voiceover ID
+          await voiceoverWorkflowManager.create({
+            id: voiceoverId, // Use actual voiceover ID, not scriptData.id
+            step: 'voiceover_completed',
+            scriptId: scriptData.id || scriptData.script_id,
+            userId: userId,
+            audioUrl: generatedAudio.audio_url,
+            completedAt: new Date().toISOString(),
+            proceedingToNextStep: true,
+            status: 'completed'
+          });
+          console.log('✅ Created voiceover workflow completion record with ID:', voiceoverId);
+        }
+      }
+    } catch (storageError) {
+      console.error('❌ Failed to update voiceover workflow in localStorage:', storageError);
+      console.error('❌ Error details:', storageError.message);
+      // Don't block the flow if localStorage fails
+    }
 
     console.log('Passing enhanced data to next step:', data);
     onNext(data);
@@ -659,10 +719,14 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
       {previousVoiceovers.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Previous Voiceovers (Demo)</CardTitle>
+            <CardTitle>Previous Voiceovers</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
+              <div className="mb-2 text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                Click on any row to select a voiceover (excluding audio player)
+              </div>
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                 <thead className="bg-gray-100 dark:bg-gray-800">
                   <tr>
@@ -676,15 +740,66 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
                   {previousVoiceovers.map(vo => (
-                    <tr key={vo.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{vo.voice_name}</td>
+                    <tr 
+                      key={vo.id} 
+                      className={`transition-all duration-200 cursor-pointer ${
+                        selectedPreviousVoiceover?.id === vo.id 
+                          ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500 dark:ring-blue-400' 
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                      onClick={(e) => {
+                        // Don't select if clicking on audio controls
+                        if (e.target.closest('audio')) {
+                          return;
+                        }
+                        
+                        // Set as selected
+                        setSelectedPreviousVoiceover(vo);
+                        
+                        // Immediately apply as generated audio
+                        const voiceoverData = {
+                          id: vo.id,
+                          audio_url: vo.audio_url,
+                          generation_time: vo.generation_time,
+                          voice_id: vo.voice_id,
+                          voice_name: vo.voice_name
+                        };
+                        
+                        setGeneratedAudio(voiceoverData);
+                        
+                        toast({
+                          title: "Voiceover Applied",
+                          description: `Now using: ${vo.voice_name}`,
+                          variant: "success"
+                        });
+                      }}
+                    >
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          {selectedPreviousVoiceover?.id === vo.id && (
+                            <CheckCircle className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                          )}
+                          <span className="font-medium text-gray-900 dark:text-gray-100">{vo.voice_name}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{new Date(vo.created_at).toLocaleString()}</td>
                       <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{vo?.speed}</td>
                       <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{vo?.pitch}</td>
                       <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{vo?.volume}</td>
-                      <td className="px-4 py-2">
-                        {/* Stylish audio player */}
-                        <AudioPlayerRow vo={vo} />
+                      <td 
+                        className="px-4 py-2"
+                        onClick={(e) => e.stopPropagation()} // Prevent row selection when clicking audio
+                      >
+                        {/* Classic HTML5 audio player */}
+                        <audio 
+                          controls 
+                          preload="metadata"
+                          className="h-8"
+                          style={{ maxWidth: '250px' }}
+                        >
+                          <source src={vo.audio_url} type="audio/mpeg" />
+                          Your browser does not support the audio element.
+                        </audio>
                       </td>
                     </tr>
                   ))}
@@ -1103,52 +1218,71 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
         <Button 
           onClick={() => {
             if (generatedAudio) {
-              console.log('Preparing to navigate to social media with data:', {
-                voice: selectedVoice,
-                audio_settings: audioSettings,
-                generated_audio: generatedAudio,
-                script_data: scriptData
-              });
+              console.log('🚀 Generate Social Media button clicked');
+              console.log('📦 Generated audio data:', generatedAudio);
+              console.log('📋 Script data:', scriptData);
               
-              // Store voiceover data and navigate to social media generation
-              // Ensure script_data has all necessary fields with fallbacks
-              const enhancedScriptData = {
-                ...scriptData,
-                // Ensure voiceover_script field is available with fallbacks
-                voiceover_script: getScriptContent(),
-                // Ensure other essential fields have defaults
-                title: scriptData?.title || 'Generated Script',
-                description: scriptData?.description || '',
-                tags: scriptData?.tags || [],
-                duration_estimate: scriptData?.duration_estimate || 'Unknown',
-                word_count: scriptData?.word_count || getScriptContent().split(' ').length,
-                script_type: scriptData?.script_type || 'unknown',
-                category: scriptData?.category || 'General',
-                language: scriptData?.language || 'English',
-                id: scriptData?.id || `script_${Date.now()}`
+              // Prepare complete voiceover data for parent component
+              const voiceoverCompleteData = {
+                // Generated audio data
+                generated_audio: {
+                  audio_url: generatedAudio.audio_url,
+                  generation_time: generatedAudio.generation_time,
+                  duration: generatedAudio.duration,
+                  file_size: generatedAudio.file_size
+                },
+                // Voice information
+                voice: {
+                  voice_id: selectedVoice.voice_id,
+                  name: selectedVoice.name,
+                  gender: selectedVoice.gender,
+                  accent: selectedVoice.accent,
+                  style: selectedVoice.style
+                },
+                // Audio settings used
+                audio_settings: {
+                  speed: Array.isArray(audioSettings.speed) ? audioSettings.speed[0] : audioSettings.speed,
+                  pitch: Array.isArray(audioSettings.pitch) ? audioSettings.pitch[0] : audioSettings.pitch,
+                  volume: Array.isArray(audioSettings.volume) ? audioSettings.volume[0] : audioSettings.volume,
+                  background_music: audioSettings.background_music,
+                  background_music_volume: Array.isArray(audioSettings.background_music_volume) 
+                    ? audioSettings.background_music_volume[0] 
+                    : audioSettings.background_music_volume
+                },
+                // Script data for context
+                script_data: {
+                  ...scriptData,
+                  voiceover_script: getScriptContent(),
+                  title: scriptData?.title || 'Generated Script',
+                  description: scriptData?.description || '',
+                  tags: scriptData?.tags || [],
+                  duration_estimate: scriptData?.duration_estimate || 'Unknown',
+                  word_count: scriptData?.word_count || getScriptContent().split(' ').length,
+                  script_type: scriptData?.script_type || 'unknown',
+                  category: scriptData?.category || 'General',
+                  language: scriptData?.language || 'English',
+                  id: scriptData?.id || `script_${Date.now()}`
+                },
+                // Metadata
+                user_id: userId,
+                created_at: new Date().toISOString(),
+                success: true
               };
               
-              const dataToStore = {
-                voice: selectedVoice,
-                audio_settings: audioSettings,
-                generated_audio: generatedAudio,
-                script_data: enhancedScriptData,
-                timestamp: Date.now()
-              };
+              console.log('✅ Calling onNext with complete voiceover data');
               
-              console.log('Enhanced script_data being stored:', enhancedScriptData);
+              // Call onNext callback to pass data to parent (page.js)
+              onNext(voiceoverCompleteData);
               
-              localStorage.setItem('generatedVoiceoverData', JSON.stringify(dataToStore));
-              
-              // Use router navigation instead of window.location for better Next.js handling
-              setTimeout(() => {
-                window.location.href = '/video-builder?step=social-media';
-              }, 100);
-              
-              // Show loading feedback
               toast({
-                title: "Redirecting...",
-                description: "Taking you to social media generation",
+                title: "Success! 🎉",
+                description: "Proceeding to social media generation...",
+              });
+            } else {
+              toast({
+                title: "No Audio Generated",
+                description: "Please generate a voiceover first",
+                variant: "destructive"
               });
             }
           }} 

@@ -23,6 +23,7 @@ import ResumeProjectDialog from '@/components/ResumeProjectDialog';
 import EnhancedProgressIndicator from '@/components/EnhancedProgressIndicator';
 import VideoBuilderNavigation from '@/components/VideoBuilderNavigation';
 import { saveProcessState, clearProcessState } from '@/utils/processStateManager';
+import LocalStorageManager from '@/lib/localStorageManager';
 
 // Backend Integration Components
 import useVideoProcess from '@/hooks/useVideoProcess';
@@ -35,7 +36,7 @@ const ScriptGeneratorPage = () => {
   const router = useRouter();
   
   // Zustand store state
-  const store = useVideoBuilderStore();
+  const store = useVideoBuilderStore(); 
   const navigation = useStepNavigation();
   const processStore = useVideoProcessStore();
   
@@ -70,10 +71,61 @@ const ScriptGeneratorPage = () => {
   // Local state for UI
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [loadingElapsed, setLoadingElapsed] = useState(0);
-  const [userId] = useState(`user_${Date.now()}`);
+  
+  // Use consistent userId: prefer authenticated user.id, fallback to localStorage-persisted ID
+  const [userId, setUserId] = useState(() => {
+    if (typeof window === 'undefined') return 'user_temp';
+    
+    // Get or create a persistent session ID from localStorage
+    const storageKey = 'video_builder_session_id';
+    let sessionId = localStorage.getItem(storageKey);
+    
+    if (!sessionId) {
+      sessionId = `user_${Date.now()}`;
+      localStorage.setItem(storageKey, sessionId);
+    }
+    
+    return sessionId;
+  });
+  
+  // Update userId when user authenticates
+  useEffect(() => {
+    if (user?.id && userId !== user.id) {
+      setUserId(user.id);
+      // Update the stored session ID to use the authenticated user ID
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('video_builder_session_id', user.id);
+      }
+    }
+  }, [user?.id]);
+  
+  // Cleanup old workflow entries - keep only current user's workflow
+  useEffect(() => {
+    if (userId && typeof window !== 'undefined') {
+      try {
+        const allWorkflows = workflowManager.getAll();
+        const currentWorkflowId = `workflow_${userId}`;
+        
+        // Remove all workflows except the current user's workflow
+        const cleanedWorkflows = allWorkflows.filter(workflow => 
+          workflow && workflow.id === currentWorkflowId
+        );
+        
+        // Only update if we actually removed something
+        if (cleanedWorkflows.length !== allWorkflows.length) {
+          localStorage.setItem('videoBuilderWorkflow', JSON.stringify(cleanedWorkflows));
+          console.log(`🧹 Cleaned up old workflows. Kept ${cleanedWorkflows.length} of ${allWorkflows.length} entries`);
+        }
+      } catch (error) {
+        console.error('Error cleaning up old workflows:', error);
+      }
+    }
+  }, [userId]); // Run when userId changes or on mount
+  
   const [isGeneratingSocialMedia, setIsGeneratingSocialMedia] = useState(false);
   const [useBackendProcess, setUseBackendProcess] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [workflowManager] = useState(() => new LocalStorageManager('videoBuilderWorkflow'));
 
   const API_BASE = '/api/script-generator';
 
@@ -231,8 +283,9 @@ const ScriptGeneratorPage = () => {
         console.log('📅 Auto-cleanup: localStorage cleared after 4 minutes');
         
         // Show a toast notification
-        toast.info('Session data automatically cleared after 4 minutes', {
+        toast('Session data automatically cleared after 4 minutes', {
           duration: 4000,
+          icon: 'ℹ️',
         });
       } catch (error) {
         console.error('Error clearing localStorage:', error);
@@ -324,7 +377,10 @@ const ScriptGeneratorPage = () => {
           } else {
             // Fallback to script selection if no process state
             store.setCurrentStep(STEPS.SCRIPTS);
-            toast.info('Starting fresh process', { duration: 3000 });
+            toast('Starting fresh process', { 
+              duration: 3000,
+              icon: 'ℹ️'
+            });
           }
           
           // Clean up URL parameters
@@ -386,7 +442,7 @@ const ScriptGeneratorPage = () => {
             
             setTimeout(() => {
               generateSocialMediaContent(0);
-            }, 500);
+            }, 100);
             
           } catch (error) {
             console.error('Error parsing voiceover data:', error);
@@ -398,6 +454,39 @@ const ScriptGeneratorPage = () => {
       }
     }
   }, [user?.id, store]);
+
+  // Track workflow progress in localStorage
+  useEffect(() => {
+    if (store.currentStep && userId) {
+      const stepData = {};
+      
+      // Collect step-specific data
+      if (store.currentStep === STEPS.SCRIPTS && store.scripts.length > 0 && store.selectedScriptIndex >= 0) {
+        stepData.scriptId = store.scripts[store.selectedScriptIndex]?.id;
+      } else if (store.currentStep === STEPS.VOICEOVER && store.voiceoverData) {
+        stepData.audioSettings = store.voiceoverData.audio_settings;
+        stepData.audioUrl = store.voiceoverData.generated_audio?.audio_url;
+        stepData.voiceId = store.voiceoverData.voice?.voice_id;
+        stepData.voiceName = store.voiceoverData.voice?.name;
+        stepData.generatedAt = new Date().toISOString();
+        stepData.generationTime = store.voiceoverData.generated_audio?.generation_time;
+      } else if (store.currentStep === STEPS.SOCIAL_MEDIA && store.socialMediaContent) {
+        stepData.platforms = Object.keys(store.socialMediaContent || {});
+      } else if (store.currentStep === STEPS.MEDIA && store.selectedMedia) {
+        stepData.mediaCount = store.selectedMedia?.length || 0;
+      } else if (store.currentStep === STEPS.VIDEO_EFFECTS && store.videoEffectsConfig) {
+        stepData.effectsConfigured = true;
+      } else if (store.currentStep === STEPS.VIDEO_GENERATION && store.generatedVideoData) {
+        stepData.videoUrl = store.generatedVideoData?.videoUrl;
+      }
+      
+      try {
+        workflowManager.updateVideoBuilderWorkflow(userId, store.currentStep, stepData);
+      } catch (error) {
+        console.error('Failed to update workflow in localStorage:', error);
+      }
+    }
+  }, [store.currentStep, userId, store.scripts, store.selectedScriptIndex, store.voiceoverData, store.socialMediaContent, store.selectedMedia, store.videoEffectsConfig, store.generatedVideoData]);
 
   // Protect the route
   useEffect(() => {
@@ -518,14 +607,17 @@ const ScriptGeneratorPage = () => {
         store.setGenerationDuration(Date.now() - generationStartTime);
         
         // Save process state for each generated script
-        data.scripts.forEach((script, index) => {
+        data.scripts.forEach(async (script, index) => {
           if (script.id) {
+            // Save to process state manager for backward compatibility
             saveProcessState(script.id, {
               currentStep: 'script_selection',
               scriptData: script,
               formData: store.formData,
               generatedAt: new Date().toISOString()
             });
+            
+            console.log(`✅ Script ${script.id} saved to process state: script_selection`);
           }
         });
         
@@ -714,24 +806,47 @@ const ScriptGeneratorPage = () => {
       return;
     }
 
-    const indexToUse = scriptIndex !== null ? scriptIndex : store.selectedScriptIndex;
+    // Determine which script to use
+    let indexToUse = scriptIndex;
+    
+    // If no scriptIndex provided, try to find the script from selectedScriptForVoiceover
+    if (indexToUse === null) {
+      if (store.selectedScriptForVoiceover) {
+        // Find the index of selectedScriptForVoiceover in the scripts array
+        indexToUse = store.scripts.findIndex(script => 
+          script.id === store.selectedScriptForVoiceover.id || 
+          script.title === store.selectedScriptForVoiceover.title
+        );
+        console.log('📍 Found script index from selectedScriptForVoiceover:', indexToUse);
+      } else {
+        // Fallback to selectedScriptIndex
+        indexToUse = store.selectedScriptIndex;
+        console.log('📍 Using selectedScriptIndex:', indexToUse);
+      }
+    }
     
     // Use provided platforms or fallback to default platforms
     const platformsToUse = selectedPlatforms || store.selectedPlatforms || ['youtube', 'instagram', 'tiktok', 'linkedin', 'twitter', 'facebook'];
     
-    console.log('generateSocialMediaContent called with:', { 
+    console.log('🚀 generateSocialMediaContent called with:', { 
       scriptIndex, 
       indexToUse, 
       scripts: store.scripts.length, 
       currentStep: store.currentStep,
       userId,
       selectedScript: store.scripts[indexToUse],
+      selectedScriptForVoiceover: store.selectedScriptForVoiceover,
       platforms: platformsToUse
     });
     
     if (indexToUse === -1 || !store.scripts[indexToUse]) {
+      console.error('❌ No valid script found at index:', indexToUse);
+      console.error('❌ Store state:', {
+        selectedScriptIndex: store.selectedScriptIndex,
+        selectedScriptForVoiceover: store.selectedScriptForVoiceover,
+        scriptsCount: store.scripts.length
+      });
       toast.error('Please select a script first');
-      console.log('No valid script found at index:', indexToUse);
       return;
     }
 
@@ -782,8 +897,19 @@ const ScriptGeneratorPage = () => {
       console.log('Social media API response data:', data);
 
       if (data.success) {
+        console.log('✅ Social media generation successful, updating store...');
+        console.log('📦 Social media data received:', data);
+        
         store.setSocialMediaContent(data);
+        console.log('✅ Store updated with social media content');
+        
         store.setCurrentStep(STEPS.SOCIAL_MEDIA);
+        console.log('✅ Current step set to:', STEPS.SOCIAL_MEDIA);
+        console.log('📊 Current store state:', {
+          currentStep: store.currentStep,
+          hasSocialMediaContent: !!store.socialMediaContent,
+          loading: store.loading
+        });
         
         // Update process state - mark social media as complete
         const currentScript = store.scripts[indexToUse];
@@ -794,12 +920,15 @@ const ScriptGeneratorPage = () => {
             social_media_content: data
           };
           
+          // Save updated script state with social media data
           saveProcessState(currentScript.id, {
             currentStep: 'voiceover_generation',
             scriptData: updatedScript,
             socialMediaData: data,
             lastUpdated: new Date().toISOString()
           });
+          
+          console.log(`✅ Workflow updated for script ${currentScript.id}: social_media_complete`);
         }
         
         toast.success('Social media content generated successfully!');
@@ -831,8 +960,33 @@ const ScriptGeneratorPage = () => {
       return;
     }
 
-    console.log('Starting voiceover generation for script:', store.scripts[indexToUse]?.title);
-    store.setSelectedScriptForVoiceover(store.scripts[indexToUse]);
+    const scriptToUse = store.scripts[indexToUse];
+    console.log('🎯 Starting voiceover generation for script:', scriptToUse?.title);
+    console.log('📋 Full script data:', scriptToUse);
+    console.log('📊 Store state before setting:', {
+      selectedScriptIndex: indexToUse,
+      totalScripts: store.scripts.length,
+      currentSelectedScript: store.selectedScriptForVoiceover
+    });
+    
+    // Mark scripts step as completed before moving to voiceover
+    try {
+      workflowManager.markStepCompleted(userId, 'scripts', {
+        scriptId: scriptToUse?.id
+      });
+    } catch (error) {
+      console.error('Failed to mark scripts step as completed:', error);
+    }
+    
+    // Set the selected script
+    store.setSelectedScriptForVoiceover(scriptToUse);
+    
+    console.log('✅ Called setSelectedScriptForVoiceover with:', scriptToUse?.title);
+    console.log('📊 Store state after setting:', {
+      selectedScriptForVoiceover: store.selectedScriptForVoiceover
+    });
+    
+    // Move to voiceover step
     store.setCurrentStep(STEPS.VOICEOVER);
   };
 
@@ -858,6 +1012,19 @@ const ScriptGeneratorPage = () => {
       
       store.setVoiceoverData(data);
       toast.success('Voiceover generated successfully! Proceeding to social media generation...');
+      
+      // Mark voiceover step as completed in workflow
+      try {
+        workflowManager.markStepCompleted(userId, 'voiceover', {
+          audioSettings: data.audio_settings,
+          audioUrl: data.generated_audio?.audio_url,
+          voiceId: data.voice?.voice_id,
+          voiceName: data.voice?.name,
+          generationTime: data.generated_audio?.generation_time
+        });
+      } catch (error) {
+        console.error('Failed to mark voiceover step as completed:', error);
+      }
       
       // Update process state - mark voiceover as complete
       const currentScript = store.selectedScriptForVoiceover;
@@ -886,7 +1053,7 @@ const ScriptGeneratorPage = () => {
       // Automatically proceed to social media generation
       setTimeout(() => {
         generateSocialMediaContent();
-      }, 1500);
+      }, 100);
     } catch (error) {
       console.error('Error in handleVoiceoverComplete:', error);
       const errorMessage = error.message || 'An unexpected error occurred during voiceover completion';
@@ -922,7 +1089,7 @@ const ScriptGeneratorPage = () => {
         // Simulate redirect to video creation
         setTimeout(() => {
           window.location.href = '/create-video';
-        }, 2000);
+        }, 100);
       } else {
         toast.error('Failed to select script for video creation');
       }
@@ -1220,9 +1387,6 @@ const ScriptGeneratorPage = () => {
         <>
           {console.log('Social media step - socialMediaContent:', store.socialMediaContent)}
           {console.log('Current store state:', { currentStep: store.currentStep, hasContent: !!store.socialMediaContent, loading: store.loading })}
-          
-
-          
           {store.loading ? (
             <div className="max-w-4xl mx-auto text-center p-8">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-xl p-6">
@@ -1258,7 +1422,16 @@ const ScriptGeneratorPage = () => {
               loading={store.loading}
               onRegenerateSocialMedia={() => generateSocialMediaContent()}
               onBackToScripts={() => store.setCurrentStep('scripts')}
-              onNext={() => store.setCurrentStep(STEPS.MEDIA)}
+              onNext={() => {
+                try {
+                  workflowManager.markStepCompleted(userId, 'social-media', {
+                    platforms: Object.keys(store.socialMediaContent || {})
+                  });
+                } catch (error) {
+                  console.error('Failed to mark social-media step as completed:', error);
+                }
+                store.setCurrentStep(STEPS.MEDIA);
+              }}
             />
           )}
         </>
@@ -1269,6 +1442,13 @@ const ScriptGeneratorPage = () => {
           socialMediaContent={store.socialMediaContent}
           scriptData={store.selectedScriptForVoiceover}
           onNext={(selectedMedia) => {
+            try {
+              workflowManager.markStepCompleted(userId, 'media', {
+                mediaCount: selectedMedia.length
+              });
+            } catch (error) {
+              console.error('Failed to mark media step as completed:', error);
+            }
             store.setSelectedMedia(selectedMedia);
             store.setCurrentStep(STEPS.VIDEO_EFFECTS);
             toast.success(`Selected ${selectedMedia.length} media items! Configuring video effects...`);
@@ -1283,6 +1463,13 @@ const ScriptGeneratorPage = () => {
           scriptData={store.selectedScriptForVoiceover}
           socialMediaContent={store.socialMediaContent}
           onNext={(videoEffects) => {
+            try {
+              workflowManager.markStepCompleted(userId, 'video-effects', {
+                effectsConfigured: true
+              });
+            } catch (error) {
+              console.error('Failed to mark video-effects step as completed:', error);
+            }
             store.setVideoEffectsConfig(videoEffects);
             store.setCurrentStep(STEPS.VIDEO_GENERATION);
             toast.success('Video effects configured! Starting video generation...');
@@ -1299,6 +1486,14 @@ const ScriptGeneratorPage = () => {
           selectedMedia={store.selectedMedia}
           videoEffectsConfig={store.videoEffectsConfig}
           onComplete={(generatedVideo) => {
+            try {
+              workflowManager.markStepCompleted(userId, 'video-generation', {
+                videoUrl: generatedVideo?.videoUrl,
+                duration: generatedVideo?.duration
+              });
+            } catch (error) {
+              console.error('Failed to mark video-generation step as completed:', error);
+            }
             store.setGeneratedVideo(generatedVideo);
             store.setCurrentStep(STEPS.VIDEO_PREVIEW);
             toast.success('Video generation completed!');
@@ -1317,7 +1512,9 @@ const ScriptGeneratorPage = () => {
           onRegenerate={() => {
             store.clearVideoGeneration();
             store.setCurrentStep(STEPS.VIDEO_GENERATION);
-            toast.info('Restarting video generation...');
+            toast('Restarting video generation...', {
+              icon: 'ℹ️'
+            });
           }}
           onDownload={(videoData) => {
             toast.success('Video download initiated!');

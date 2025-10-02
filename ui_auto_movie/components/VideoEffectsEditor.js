@@ -149,7 +149,9 @@ const VideoEffectsEditor = ({
 
   // Preview effects
   const previewEffects = () => {
-    toast.info('🎬 Effect preview coming soon!');
+    toast('🎬 Effect preview coming soon!', {
+      icon: 'ℹ️'
+    });
   };
 
   // Reset to defaults

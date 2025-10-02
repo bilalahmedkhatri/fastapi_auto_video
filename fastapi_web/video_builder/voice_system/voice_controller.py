@@ -1,7 +1,7 @@
 """
 Voice Controller - FastAPI endpoints for voice operations
 """
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from fastapi.responses import FileResponse
 from typing import Optional
 import logging
@@ -45,7 +45,7 @@ class VoiceController:
                 raise HTTPException(status_code=500, detail=str(e))
         
         @voice_router.post("/generate", response_model=VoiceResponse)
-        async def generate_voiceover(request: VoiceRequest):
+        async def generate_voiceover(request: VoiceRequest, req: Request):
             """Generate voiceover audio from text using selected voice"""
             try:
                 # Validate request
@@ -53,7 +53,10 @@ class VoiceController:
                 if not is_valid:
                     raise HTTPException(status_code=400, detail=error_msg)
                 
-                return await self.service.generate_voiceover(request)
+                # Auto-detect base URL from request
+                base_url = f"{req.url.scheme}://{req.url.netloc}"
+                
+                return await self.service.generate_voiceover(request, base_url=base_url)
             except HTTPException:
                 raise
             except Exception as e:

@@ -144,13 +144,11 @@ export const useVideoBuilderStore = create(
 
       deleteProject: () => {
         set(initialState)
-        localStorage.removeItem('video-builder-storage')
       },
 
       // Complete reset to initial state (for fresh start)
       resetToInitialState: () => {
         set(initialState)
-        localStorage.removeItem('video-builder-storage')
       },
 
       // Step navigation
@@ -693,6 +691,7 @@ export const useVideoBuilderStore = create(
           formData: state.formData,
           scripts: state.scripts,
           selectedScriptIndex: state.selectedScriptIndex,
+          selectedScriptForVoiceover: state.selectedScriptForVoiceover, // ✅ Added for voiceover workflow
           voiceoverData: state.voiceoverData,
           selectedVoice: state.selectedVoice,
           audioSettings: state.audioSettings,

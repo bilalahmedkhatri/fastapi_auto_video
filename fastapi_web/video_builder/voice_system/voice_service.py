@@ -208,7 +208,8 @@ class VoiceService:
     
     async def generate_voiceover(
         self, 
-        request: VoiceRequest
+        request: VoiceRequest,
+        base_url: str = "http://localhost:8000"
     ) -> VoiceResponse:
         """Generate voiceover audio from text using selected voice"""
         
@@ -243,6 +244,7 @@ class VoiceService:
             logger.info(f"Voiceover generated successfully in {generation_time:.2f}s")
             
             # Save voiceover record to database
+            voiceover_id = None  # Initialize ID variable
             try:
                 with Session(engine) as session:
                     # Get voice name from config
@@ -260,7 +262,7 @@ class VoiceService:
                         volume=request.audio_settings.volume,
                         tone=request.audio_settings.tone,
                         filename=filename,
-                        file_url=f"/api/audio/{filename}",
+                        file_url=f"{base_url}/api/audio/{filename}",
                         file_size=file_size,
                         duration_seconds=estimated_duration,
                         generation_duration_ms=int(generation_time * 1000),
@@ -271,17 +273,24 @@ class VoiceService:
                     
                     session.add(voiceover_record)
                     session.commit()
+                    session.refresh(voiceover_record)  # Refresh to get the generated ID
                     
-                    logger.info(f"Saved voiceover record to database: {voiceover_record.id}")
+                    voiceover_id = str(voiceover_record.id)  # Capture the database ID
+                    logger.info(f"Saved voiceover record to database with ID: {voiceover_id}")
                     
             except Exception as db_error:
                 logger.error(f"Failed to save voiceover to database: {str(db_error)}")
                 # Continue without failing the entire operation
             
+            finally:
+                # close the session if needed
+                session.close()
+                
             return VoiceResponse(
                 success=True,
+                id=voiceover_id,  # Include the database ID in the response
                 audio_path=audio_path,
-                audio_url=f"/api/audio/{filename}",
+                audio_url=f"{base_url}/api/audio/{filename}",  # Return full URL, not relative path
                 duration=estimated_duration,
                 file_size=file_size,
                 generation_time=generation_time

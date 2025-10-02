@@ -6,6 +6,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 const WS_URL = 'ws://localhost:8000';
+const WS_ENABLED = process.env.NEXT_PUBLIC_WS_ENABLED !== 'false'; // Allow disabling via env var
 
 export const useVideoWebSocket = (userId, onMessage) => {
   const router = useRouter();
@@ -13,6 +14,8 @@ export const useVideoWebSocket = (userId, onMessage) => {
   const reconnectTimer = useRef(null);
   const shouldConnect = useRef(true);
   const isVisible = useRef(true);
+  const connectionAttempts = useRef(0);
+  const maxConnectionAttempts = 3; // Stop trying after 3 failed attempts
 
   const disconnect = useCallback(() => {
     shouldConnect.current = false;
@@ -28,13 +31,28 @@ export const useVideoWebSocket = (userId, onMessage) => {
   }, []);
 
   const connect = useCallback(() => {
+    // Don't connect if disabled, max attempts reached, or conditions not met
+    if (!WS_ENABLED) {
+      console.log('🚫 WebSocket disabled via environment variable');
+      return;
+    }
+    
+    if (connectionAttempts.current >= maxConnectionAttempts) {
+      console.log('🚫 Max WebSocket connection attempts reached. Server may not be running.');
+      return;
+    }
+    
     if (!shouldConnect.current || !isVisible.current || !userId) return;
     
     try {
+      connectionAttempts.current += 1;
+      console.log(`🔌 WebSocket connection attempt ${connectionAttempts.current}/${maxConnectionAttempts}`);
+      
       ws.current = new WebSocket(`${WS_URL}/ws/video-process?user_id=${userId}`);
       
       ws.current.onopen = () => {
         console.log('🔗 WebSocket connected for user:', userId);
+        connectionAttempts.current = 0; // Reset on successful connection
       };
       
       ws.current.onmessage = (event) => {
@@ -51,18 +69,25 @@ export const useVideoWebSocket = (userId, onMessage) => {
       
       ws.current.onclose = () => {
         console.log('🔌 WebSocket disconnected');
-        if (shouldConnect.current && isVisible.current) {
-          console.log('🔄 Attempting reconnect in 3 seconds...');
-          reconnectTimer.current = setTimeout(connect, 3000);
+        if (shouldConnect.current && isVisible.current && connectionAttempts.current < maxConnectionAttempts) {
+          const retryDelay = Math.min(3000 * connectionAttempts.current, 10000); // Progressive backoff
+          console.log(`🔄 Attempting reconnect in ${retryDelay/1000} seconds...`);
+          reconnectTimer.current = setTimeout(connect, retryDelay);
+        } else if (connectionAttempts.current >= maxConnectionAttempts) {
+          console.log('⚠️ WebSocket server appears to be unavailable. Real-time updates disabled.');
         }
       };
       
       ws.current.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
+        // Only log WebSocket errors if it's not a connection refused error
+        // This prevents console spam when the WebSocket server is not running
+        if (ws.current && ws.current.readyState !== WebSocket.CONNECTING) {
+          console.warn('⚠️ WebSocket error (server may not be running)');
+        }
       };
       
     } catch (error) {
-      console.error('❌ WebSocket connection error:', error);
+      console.warn('⚠️ WebSocket connection error:', error.message);
     }
   }, [userId, onMessage]);
 

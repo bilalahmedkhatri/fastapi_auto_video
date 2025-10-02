@@ -118,9 +118,6 @@ const VideoProcessPage = () => {
   // Handle edit video (return to builder with data)
   const handleEditVideo = () => {
     // Store current video data for editing
-    if (displayVideoData?.frontend_data) {
-      localStorage.setItem('editVideoData', JSON.stringify(displayVideoData.frontend_data));
-    }
     router.push('/video-builder?mode=edit');
   };
 

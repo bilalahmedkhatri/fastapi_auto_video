@@ -76,6 +76,7 @@ class VoiceRequest(BaseModel):
 class VoiceResponse(BaseModel):
     """Response model for voice generation"""
     success: bool
+    id: Optional[str] = None  # Database ID of the generated voiceover record
     audio_url: Optional[str] = None
     audio_path: Optional[str] = None
     duration: Optional[float] = None
