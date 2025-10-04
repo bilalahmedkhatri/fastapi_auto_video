@@ -592,5 +592,208 @@ def _get_file_info(file_path: str) -> Dict[str, Any]:
         return {}
 
 
+# ============================================================================
+# INTERNET MEDIA SEARCH ENDPOINTS
+# ============================================================================
+
+class MediaSearchRequest(BaseModel):
+    """Request model for internet media search"""
+    query: str = Field(..., min_length=1, description="Search query")
+    platforms: List[str] = Field(
+        default=["pexels"],
+        description="Platforms to search: pexels, google, pixabay"
+    )
+    media_type: str = Field(
+        default="both",
+        pattern="^(image|video|both)$",
+        description="Type of media to search for"
+    )
+    tags: Optional[List[str]] = Field(default=[], description="Additional search tags")
+    keywords: Optional[List[str]] = Field(default=[], description="Additional keywords")
+    per_page: int = Field(default=15, ge=1, le=50, description="Results per platform")
+    orientation: Optional[str] = Field(
+        default=None,
+        pattern="^(landscape|portrait|square)$",
+        description="Preferred orientation"
+    )
+
+
+class MediaSearchResponse(BaseModel):
+    """Response model for media search"""
+    status: str
+    query: str
+    total_results: int
+    results: List[Dict[str, Any]]
+    platforms_searched: List[str]
+    errors: Optional[Dict[str, str]] = {}
+
+
+@router.post("/search", response_model=MediaSearchResponse)
+async def search_internet_media(request: MediaSearchRequest):
+    """
+    Search for images and videos across multiple internet platforms
+    
+    Supports:
+    - Pexels (photos and videos)
+    - Google Custom Search (images)
+    - Pixabay (future implementation)
+    
+    Args:
+        request: Search request with query, platforms, filters
+        
+    Returns:
+        Aggregated search results from all platforms
+    """
+    logger.info(f"Searching for '{request.query}' on platforms: {request.platforms}")
+    
+    # Combine query with tags and keywords
+    search_terms = [request.query] + request.tags + request.keywords
+    combined_query = " ".join(filter(None, search_terms))
+    
+    all_results = []
+    errors = {}
+    platforms_searched = []
+    
+    # Search Pexels
+    if "pexels" in request.platforms:
+        try:
+            from video_builder.apis.pexel import (
+                PexelsAPI,
+                normalize_pexels_photo,
+                normalize_pexels_video
+            )
+            
+            pexels = PexelsAPI()
+            platforms_searched.append("pexels")
+            
+            # Search for images
+            if request.media_type in ["image", "both"]:
+                photos_response = pexels.search_photos(
+                    query=combined_query,
+                    per_page=request.per_page,
+                    orientation=request.orientation
+                )
+                
+                if "error" in photos_response:
+                    errors["pexels_photos"] = photos_response["error"]
+                else:
+                    photos = photos_response.get("photos", [])
+                    for photo in photos:
+                        normalized = normalize_pexels_photo(photo)
+                        normalized["name"] = f"{request.query} - {normalized['photographer']}"
+                        all_results.append(normalized)
+            
+            # Search for videos
+            if request.media_type in ["video", "both"]:
+                videos_response = pexels.search_videos(
+                    query=combined_query,
+                    per_page=request.per_page,
+                    orientation=request.orientation
+                )
+                
+                if "error" in videos_response:
+                    errors["pexels_videos"] = videos_response["error"]
+                else:
+                    videos = videos_response.get("videos", [])
+                    for video in videos:
+                        normalized = normalize_pexels_video(video)
+                        normalized["name"] = f"{request.query} - {normalized['user']} ({normalized['duration']}s)"
+                        all_results.append(normalized)
+                        
+        except Exception as e:
+            logger.error(f"Pexels search error: {e}")
+            errors["pexels"] = str(e)
+    
+    # Search Google Custom Search
+    if "google" in request.platforms and request.media_type in ["image", "both"]:
+        try:
+            from video_builder.apis.google_search_api import google_image_search
+            import os
+            
+            platforms_searched.append("google")
+            
+            api_key = os.getenv("GOOGLE_CUSTOM_SEARCH_API_KEY")
+            cse_id = os.getenv("GOOGLE_SEARCH_ENGINE")
+            
+            if api_key and cse_id:
+                image_urls = google_image_search(
+                    api_key=api_key,
+                    cse_id=cse_id,
+                    search_ai_query=combined_query,
+                    num_results=min(request.per_page, 15)  # Google max 15
+                )
+                
+                for idx, url in enumerate(image_urls):
+                    all_results.append({
+                        "id": f"google-image-{hash(url)}",
+                        "name": f"{request.query} - Google Image {idx + 1}",
+                        "type": "image",
+                        "source": "google",
+                        "url": url,
+                        "thumbnail": url,
+                        "license": "Rights may vary - check source",
+                        "license_url": ""
+                    })
+            else:
+                errors["google"] = "Google API credentials not configured"
+                
+        except Exception as e:
+            logger.error(f"Google search error: {e}")
+            errors["google"] = str(e)
+    
+    # Pixabay (placeholder for future implementation)
+    if "pixabay" in request.platforms:
+        errors["pixabay"] = "Pixabay integration not yet implemented"
+    
+    return MediaSearchResponse(
+        status="success" if all_results else "no_results",
+        query=request.query,
+        total_results=len(all_results),
+        results=all_results,
+        platforms_searched=platforms_searched,
+        errors=errors if errors else None
+    )
+
+
+@router.get("/search/platforms")
+async def get_available_platforms():
+    """
+    Get list of available search platforms and their status
+    
+    Returns:
+        Dictionary of platforms with availability and configuration status
+    """
+    import os
+    
+    platforms = {
+        "pexels": {
+            "name": "Pexels",
+            "available": bool(os.getenv("PEXELS_API_KEY")),
+            "supports": ["images", "videos"],
+            "requires_attribution": True,
+            "rate_limit": "200 requests/hour"
+        },
+        "google": {
+            "name": "Google Custom Search",
+            "available": bool(os.getenv("GOOGLE_CUSTOM_SEARCH_API_KEY") and os.getenv("GOOGLE_SEARCH_ENGINE")),
+            "supports": ["images"],
+            "requires_attribution": False,
+            "rate_limit": "100 queries/day (free tier)"
+        },
+        "pixabay": {
+            "name": "Pixabay",
+            "available": False,
+            "supports": ["images", "videos"],
+            "requires_attribution": False,
+            "rate_limit": "Not implemented"
+        }
+    }
+    
+    return {
+        "platforms": platforms,
+        "default": "pexels"
+    }
+
+
 # Export router for main app
 __all__ = ['router']

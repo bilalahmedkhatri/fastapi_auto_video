@@ -175,17 +175,25 @@ const VideoEffectsEditor = ({
 
   // Handle next step
   const handleNext = () => {
-    // Save all settings to store
-    store.setVideoEffectsConfig({
+    // Prepare complete effects configuration
+    const effectsConfig = {
       videoConfig,
       visualEffects,
       textStyles,
       audioSettings,
       selectedMedia: fullMediaData || []
-    });
+    };
+    
+    // Save all settings to store
+    store.setVideoEffectsConfig(effectsConfig);
+    
+    // Log for debugging
+    console.log('🎨 Video Effects Config being sent:', effectsConfig);
     
     toast.success('Video effects configured successfully!');
-    onNext();
+    
+    // Pass configuration to parent component
+    onNext(effectsConfig);
   };
 
   return (

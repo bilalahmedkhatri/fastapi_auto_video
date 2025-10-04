@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useVideoBuilderStore } from '@/stores/useVideoBuilderStore';
 import { useMediaProcessing } from '@/hooks/useMediaProcessing';
-import mediaAPI from '@/lib/mediaAPI';
 
 const MediaManager = ({ 
   onNext, 
@@ -40,25 +39,12 @@ const MediaManager = ({
     processingTasks,
     processingProgress,
     uploadFiles,
-    processMedia,
     cancelTask,
     getProcessingStats
   } = useMediaProcessing();
   
   const fileInputRef = useRef(null);
   const videoInputRef = useRef(null);
-
-  // Helper function to create hash codes
-  String.prototype.hashCode = function() {
-    let hash = 0;
-    if (this.length === 0) return hash;
-    for (let i = 0; i < this.length; i++) {
-      const char = this.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return hash;
-  };
 
   // Initialize search tags and keywords from social media content
   React.useEffect(() => {
@@ -122,7 +108,7 @@ const MediaManager = ({
               if (fileInfo && analysis) {
                 // Create enhanced media item with analysis
                 const mediaItem = {
-                  id: Date.now() + Math.random() + mediaId.hashCode(), // Unique frontend ID
+                  id: `${Date.now()}-${Math.random()}-${mediaId}`, // Unique frontend ID
                   backendId: mediaId, // Backend media ID
                   name: fileInfo.filename || analysis.file_info?.filename || 'Unknown',
                   type: analysis.file_info?.extension?.startsWith('.') ? 
@@ -462,91 +448,68 @@ const MediaManager = ({
 
     setIsSearching(true);
     
-    // Combine search query with tags and keywords
-    const searchTerms = [
-      searchQuery.trim(),
-      ...searchTags,
-      ...searchKeywords
-    ].filter(term => term.length > 0);
-    
-    const combinedSearchQuery = searchTerms.join(' ');
-    
     try {
-      // Mock search results for now
-      setTimeout(() => {
-        const mockResults = [
-          {
-            id: `search-${Date.now()}-1`,
-            name: `${combinedSearchQuery} - Professional Stock Photo`,
-            type: 'image',
-            url: `https://picsum.photos/300/200?random=${Math.floor(Math.random() * 1000)}`,
-            source: 'unsplash',
-            tags: ['stock', 'photo', ...searchTags.slice(0, 3)],
-            keywords: [...searchKeywords.slice(0, 3)],
-            license: 'Free for commercial use'
-          },
-          {
-            id: `search-${Date.now()}-2`,
-            name: `${combinedSearchQuery} - High Quality Image`,
-            type: 'image',
-            url: `https://picsum.photos/300/200?random=${Math.floor(Math.random() * 1000)}`,
-            source: 'pexels',
-            tags: ['stock', 'photo', ...searchTags.slice(1, 4)],
-            keywords: [...searchKeywords.slice(1, 4)],
-            license: 'Free for commercial use'
-          },
-          {
-            id: `search-${Date.now()}-3`,
-            name: `${combinedSearchQuery} - Dynamic Stock Video`,
-            type: 'video',
-            url: 'https://via.placeholder.com/300x200/EF4444/white?text=HD+Video',
-            source: 'pixabay',
-            tags: ['stock', 'video', ...searchTags.slice(2, 5)],
-            keywords: [...searchKeywords.slice(2, 5)],
-            duration: '15s',
-            license: 'Free for commercial use'
-          },
-          {
-            id: `search-${Date.now()}-4`,
-            name: `${combinedSearchQuery} - Premium Stock Video`,
-            type: 'video',
-            url: 'https://via.placeholder.com/300x200/10B981/white?text=4K+Video',
-            source: 'shutterstock',
-            tags: ['stock', 'video', ...searchTags.slice(0, 2)],
-            keywords: [...searchKeywords.slice(3, 6)],
-            duration: '30s',
-            license: 'Premium license required'
-          },
-          {
-            id: `search-${Date.now()}-5`,
-            name: `${combinedSearchQuery} - Creative Image`,
-            type: 'image',
-            url: `https://picsum.photos/300/200?random=${Math.floor(Math.random() * 1000)}`,
-            source: 'freepik',
-            tags: ['creative', 'photo', ...searchTags.slice(3, 6)],
-            keywords: [...searchKeywords.slice(0, 2)],
-            license: 'Attribution required'
-          },
-          {
-            id: `search-${Date.now()}-6`,
-            name: `${combinedSearchQuery} - Motion Graphics`,
-            type: 'video',
-            url: 'https://via.placeholder.com/300x200/8B5CF6/white?text=Motion+GFX',
-            source: 'envato',
-            tags: ['motion', 'graphics', ...searchTags.slice(4, 7)],
-            keywords: [...searchKeywords.slice(4, 7)],
-            duration: '10s',
-            license: 'Standard license'
-          }
-        ];
+      // Call backend API for internet media search
+      const response = await fetch('http://localhost:8000/api/media/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: searchQuery.trim(),
+          platforms: ['pexels', 'google'], // Search both Pexels and Google
+          media_type: 'both', // Search for both images and videos
+          tags: searchTags,
+          keywords: searchKeywords,
+          per_page: 15,
+          orientation: null // No orientation filter for now
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'no_results') {
+        toast(`No results found for "${data.query}"`, {
+          icon: 'ℹ️'
+        });
+        store.setSearchResults([]);
+      } else {
+        // Add tags and keywords to results
+        const enrichedResults = data.results.map(result => ({
+          ...result,
+          tags: searchTags.length > 0 ? searchTags : ['stock'],
+          keywords: searchKeywords.length > 0 ? searchKeywords : []
+        }));
         
-        store.setSearchResults(mockResults);
-        setIsSearching(false);
-        toast.success(`Found ${mockResults.length} results for "${combinedSearchQuery}"`);
-      }, 2000);
-    } catch (error) {
+        store.setSearchResults(enrichedResults);
+        
+        // Show success message with platform info
+        const platformsUsed = data.platforms_searched.join(', ');
+        toast.success(`Found ${data.total_results} results from ${platformsUsed}`);
+        
+        // Show any platform errors as warnings
+        if (data.errors && Object.keys(data.errors).length > 0) {
+          const errorMessages = Object.entries(data.errors)
+            .map(([platform, error]) => `${platform}: ${error}`)
+            .join('; ');
+          toast(`Platform issues: ${errorMessages}`, {
+            icon: '⚠️'
+          });
+        }
+      }
+      
       setIsSearching(false);
-      toast.error('Search failed. Please try again.');
+    } catch (error) {
+      console.error('Media search error:', error);
+      setIsSearching(false);
+      toast.error(`Search failed: ${error.message}`);
+      
+      // Fallback to empty results
+      store.setSearchResults([]);
     }
   };
 
@@ -559,53 +522,49 @@ const MediaManager = ({
 
     setIsGenerating(true);
     try {
-      // Mock AI generation for now
-      setTimeout(() => {
-        const mockGenerated = [
-          {
-            id: `ai-img-${Date.now()}`,
-            name: `AI Image: ${aiPrompt.substring(0, 30)}...`,
-            type: 'image',
-            url: `https://picsum.photos/300/200?random=${Math.floor(Math.random() * 1000)}&blur=1`,
-            source: 'ai-generated',
-            prompt: aiPrompt,
-            tags: ['ai', 'generated', 'dalle', aiPrompt.toLowerCase()],
-            model: 'DALL-E 3',
-            resolution: '1024x1024'
-          },
-          {
-            id: `ai-video-${Date.now()}`,
-            name: `AI Video: ${aiPrompt.substring(0, 30)}...`,
-            type: 'video',
-            url: 'https://via.placeholder.com/300x200/F59E0B/white?text=AI+Video+Generated',
-            source: 'ai-generated',
-            prompt: aiPrompt,
-            tags: ['ai', 'generated', 'video', aiPrompt.toLowerCase()],
-            model: 'Runway ML',
-            duration: '4s',
-            resolution: '1280x720'
-          },
-          {
-            id: `ai-img2-${Date.now()}`,
-            name: `AI Variant: ${aiPrompt.substring(0, 30)}...`,
-            type: 'image',
-            url: `https://picsum.photos/300/200?random=${Math.floor(Math.random() * 1000)}&grayscale`,
-            source: 'ai-generated',
-            prompt: `${aiPrompt} (artistic variant)`,
-            tags: ['ai', 'generated', 'midjourney', aiPrompt.toLowerCase()],
-            model: 'Midjourney',
-            resolution: '1024x1024'
-          }
-        ];
+      const response = await fetch('http://localhost:8000/api/media/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: aiPrompt.trim(),
+          platforms: ['pexels'],
+          media_type: 'both',
+          tags: searchTags,
+          keywords: searchKeywords,
+          per_page: 10
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI generation failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'no_results') {
+        toast(`No media found for "${aiPrompt}"`, {
+          icon: 'ℹ️'
+        });
+      } else {
+        const generatedMedia = data.results.map(result => ({
+          ...result,
+          source: 'ai-generated',
+          prompt: aiPrompt,
+          tags: ['ai', 'generated', ...(result.tags || [])],
+        }));
         
-        store.addGeneratedMedia(mockGenerated);
-        setIsGenerating(false);
-        toast.success(`Generated ${mockGenerated.length} AI media items`);
-        setAiPrompt('');
-      }, 3000);
-    } catch (error) {
+        store.addGeneratedMedia(generatedMedia);
+        toast.success(`Generated ${generatedMedia.length} AI media items`);
+      }
+      
+      setAiPrompt('');
       setIsGenerating(false);
-      toast.error('AI generation failed. Please try again.');
+    } catch (error) {
+      console.error('AI generation error:', error);
+      setIsGenerating(false);
+      toast.error(`AI generation failed: ${error.message}`);
     }
   };
 

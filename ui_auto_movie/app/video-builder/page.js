@@ -1510,10 +1510,13 @@ const ScriptGeneratorPage = () => {
         <VideoPreviewStep
           generatedVideo={store.generatedVideoData}
           onRegenerate={() => {
+            // Instead of immediately regenerating, send user back to MEDIA step
+            // so they can adjust media/effects before rebuilding.
             store.clearVideoGeneration();
-            store.setCurrentStep(STEPS.VIDEO_GENERATION);
-            toast('Restarting video generation...', {
-              icon: 'ℹ️'
+            // Preserve previously selected media/effects in store; just move step back.
+            store.setCurrentStep(STEPS.MEDIA);
+            toast('Adjust your media or effects, then proceed to regenerate.', {
+              icon: '🛠️'
             });
           }}
           onDownload={(videoData) => {
@@ -1524,7 +1527,7 @@ const ScriptGeneratorPage = () => {
             store.setCurrentStep(STEPS.INPUT);
             toast.success('Starting new video creation!');
           }}
-          onBack={() => store.setCurrentStep(STEPS.VIDEO_GENERATION)}
+          onBack={() => store.setCurrentStep(STEPS.MEDIA)}
         />
       )}
     </div>

@@ -10,16 +10,20 @@ This is a full-stack AI video generation platform with three main components:
 ## Key Data Flow
 
 1. **Video Request**: Frontend → FastAPI → Celery task queue
-2. **Processing**: Celery worker executes `auto_movie_editor/tools/run_app.py`
+2. **Processing**: Celery worker executes `fastapi/celery_app.py`
 3. **Progress Tracking**: Redis stores real-time processing state 
 4. **Completion**: Database stores final video metadata + output URL
 
 ## Environment Setup Requirements
+- Python 3.12.10 (virtual environments recommended)
+- activate virtualenvs when open terminal "./fastapp/Scripts/activate"
+- start celery worker with "celery -A celery_app worker --loglevel=info --pool=solo"
+- start fastapi server with "fastapi dev main.py"
 
 ### Python Environments
 - **auto_movie_editor**: Uses `gen_vedio` virtual environment (Python 3.8+)
 - **fastapi_web**: Uses `fastapp` virtual environment (Python 3.8+)
-- **Critical**: Windows requires Celery with `worker_pool='solo'` configuration
+- **Critical**: Windows requires Celery with `worker_pool='solo'` 
 
 ### System Dependencies
 - **FFmpeg**: Required for video processing (must be in PATH)
@@ -300,3 +304,6 @@ NEXTAUTH_URL=http://localhost:3000
 - `ui_auto_movie/components/`: Reusable React components (especially `ProcessingModal.js`)
 - `ui_auto_movie/app/`: Next.js App Router pages and API routes
 - `ui_auto_movie/prisma/`: Database schema and migrations
+- `ui_auto_movie/test/`: create test cases for frontend
+- `ui_auto_movie/api/`: API routes and handlers
+- `ui_auto_movie/auto_task/`: backend task management

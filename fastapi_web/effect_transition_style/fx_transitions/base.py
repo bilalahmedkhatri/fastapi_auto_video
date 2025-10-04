@@ -16,9 +16,9 @@ class TransitionBase:
     def _load_clip(self, path):
         ext = os.path.splitext(path)[1].lower()
         if ext in [".jpg", ".jpeg", ".png", ".bmp", ".webp"]:
-            return ImageClip(path).resize(self.size).set_duration(self.duration)
+            return ImageClip(path).resized(self.size).with_duration(self.duration)
         elif ext in [".mp4", ".mov", ".avi", ".mkv"]:
-            return VideoFileClip(path).resize(self.size)
+            return VideoFileClip(path).resized(self.size)
         else:
             raise ValueError(f"Unsupported file format: {path}")
 

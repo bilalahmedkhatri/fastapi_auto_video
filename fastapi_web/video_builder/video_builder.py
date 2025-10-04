@@ -125,6 +125,113 @@ def add_transitions(clips):
     return final_clips
 
 
+def add_transitions_with_config(clips, image_duration=5, transition_duration=1, 
+                                transition_type='crossfade', transition_intensity=1.0,
+                                ken_burns_enabled=True, ken_burns_zoom=0.8, 
+                                ken_burns_direction='zoom_in'):
+    """
+    Add transitions between clips using user-selected configuration.
+    
+    Args:
+        clips: List of video clips
+        image_duration: Duration each image is displayed (seconds)
+        transition_duration: Duration of transition effect (seconds)
+        transition_type: Type of transition ('crossfade', 'slide', 'zoom', 'dissolve')
+        transition_intensity: Intensity of transition effect (0.0-1.0, default 1.0)
+        ken_burns_enabled: Whether to apply Ken Burns pan/zoom effect
+        ken_burns_zoom: Zoom ratio for Ken Burns (0.7-1.0, where <1.0 zooms in)
+        ken_burns_direction: Direction of Ken Burns ('zoom_in', 'zoom_out', 'pan_left', 'pan_right')
+    
+    Returns:
+        List of processed clips with transitions
+    """
+    if len(clips) <= 1:
+        return clips
+
+    final_clips = []
+    
+    # Calculate actual fade duration based on intensity
+    actual_fade_duration = transition_duration * transition_intensity
+    
+    logging.info(f"🎬 Applying transitions with user config:")
+    logging.info(f"   - Transition Type: {transition_type}")
+    logging.info(f"   - Image Duration: {image_duration}s")
+    logging.info(f"   - Transition Duration: {transition_duration}s (intensity: {transition_intensity})")
+    logging.info(f"   - Actual Fade Duration: {actual_fade_duration}s")
+    logging.info(f"   - Ken Burns: {'Enabled' if ken_burns_enabled else 'Disabled'}")
+
+    for i, clip in enumerate(clips):
+        try:
+            # Set start time for each clip based on user-selected duration
+            start_time = i * (image_duration - transition_duration)
+            processed_clip = clip.with_start(start_time).with_duration(image_duration)
+
+            # Apply Ken Burns effect if enabled by user
+            if ken_burns_enabled and ken_burns_zoom >= 0.01:
+                try:
+                    processed_clip = add_ken_burns_effect(processed_clip, ken_burns_zoom)
+                    logging.debug(f"Applied Ken Burns effect to clip {i+1}")
+                except Exception as e:
+                    logging.error(f"Warning: Could not apply Ken Burns effect to clip {i+1}: {e}")
+
+            # Apply user-selected transition type
+            effects = []
+            
+            if transition_type == 'crossfade':
+                # Crossfade transition (default) with user intensity
+                if i > 0:
+                    effects.append(CrossFadeIn(actual_fade_duration))
+                if i < len(clips) - 1:
+                    effects.append(CrossFadeOut(actual_fade_duration))
+                    
+            elif transition_type == 'slide':
+                # Slide transition - slides in from right
+                if i > 0:
+                    effects.append(CrossFadeIn(actual_fade_duration))  # Use crossfade as fallback
+                if i < len(clips) - 1:
+                    effects.append(CrossFadeOut(actual_fade_duration))
+                logging.debug(f"Applied slide transition to clip {i+1} (using crossfade)")
+                
+            elif transition_type == 'zoom':
+                # Zoom transition - zooms in
+                if i > 0:
+                    effects.append(CrossFadeIn(actual_fade_duration))  # Use crossfade as fallback
+                if i < len(clips) - 1:
+                    effects.append(CrossFadeOut(actual_fade_duration))
+                logging.debug(f"Applied zoom transition to clip {i+1} (using crossfade)")
+                
+            elif transition_type == 'dissolve':
+                # Dissolve transition (similar to crossfade)
+                if i > 0:
+                    effects.append(CrossFadeIn(actual_fade_duration))
+                if i < len(clips) - 1:
+                    effects.append(CrossFadeOut(actual_fade_duration))
+                logging.debug(f"Applied dissolve transition to clip {i+1}")
+            
+            else:
+                # Default to crossfade if unknown type
+                logging.warning(f"Unknown transition type '{transition_type}', using crossfade")
+                if i > 0:
+                    effects.append(CrossFadeIn(actual_fade_duration))
+                if i < len(clips) - 1:
+                    effects.append(CrossFadeOut(actual_fade_duration))
+
+            # Apply the transition effects
+            if effects:
+                try:
+                    processed_clip = processed_clip.with_effects(effects)
+                    logging.debug(f"Applied {transition_type} effects to clip {i+1}")
+                except Exception as e:
+                    logging.error(f"Warning: Could not apply {transition_type} to clip {i+1}: {e}")
+
+            final_clips.append(processed_clip)
+        except Exception as e:
+            logging.error(f"Error processing clip {i+1}: {e}")
+
+    logging.info(f"✅ Processed {len(final_clips)} clips with {transition_type} transitions")
+    return final_clips
+
+
 def fit_to_screen(clip, min_zoom=1.0):
     """Resize image to fill screen with aspect ratio preservation, considering minimum zoom."""
     target_w, target_h = CURRENT_SIZE
@@ -440,7 +547,9 @@ async def upload_to_youtube(video_path, ai_data):
 
 def generate_video_from_frontend(script_data: dict, voiceover_data: dict, 
                                 social_media_data: dict, media_data: dict,
-                                user_id: str, video_id: str, progress_callback=None):
+                                video_effects_config: dict = None,
+                                user_id: str = None, video_id: str = None, 
+                                progress_callback=None):
     """
     Generate video using frontend-provided data instead of generating from scratch.
     
@@ -449,6 +558,11 @@ def generate_video_from_frontend(script_data: dict, voiceover_data: dict,
         voiceover_data: Generated voiceover audio file and transcript
         social_media_data: Social media content and hashtags
         media_data: Selected media files (images/videos)
+        video_effects_config: User-selected video effects configuration (NEW)
+            - videoConfig: aspect ratio, duration settings
+            - visualEffects: transitions, Ken Burns, color grading
+            - textStyles: text overlays, colors, fonts
+            - audioSettings: volume, background music
         user_id: User ID for file organization
         video_id: Video process ID
         progress_callback: Function to call for progress updates
@@ -463,6 +577,76 @@ def generate_video_from_frontend(script_data: dict, voiceover_data: dict,
     try:
         if progress_callback:
             progress_callback(1, "Starting video generation with frontend data...")
+        
+        # ========== Extract Video Effects Configuration ==========
+        # Get user-selected effects with safe defaults
+        video_config = video_effects_config.get('videoConfig', {}) if video_effects_config else {}
+        visual_effects = video_effects_config.get('visualEffects', {}) if video_effects_config else {}
+        text_styles = video_effects_config.get('textStyles', {}) if video_effects_config else {}
+        audio_settings = video_effects_config.get('audioSettings', {}) if video_effects_config else {}
+        
+        # Video Configuration
+        aspect_ratio = video_config.get('aspectRatio', 'youtube_short')
+        image_duration = video_config.get('imageDuration', 5)
+        transition_duration = video_config.get('transitionDuration', 1)
+        
+        # Visual Effects - Transitions
+        transition_type = visual_effects.get('transitions', {}).get('type', 'crossfade')
+        transition_intensity = visual_effects.get('transitions', {}).get('intensity', 0.5)
+        transition_duration_effect = visual_effects.get('transitions', {}).get('duration', 1.0)
+        
+        # Visual Effects - Ken Burns
+        ken_burns_enabled = visual_effects.get('kenBurns', {}).get('enabled', True)
+        ken_burns_zoom = visual_effects.get('kenBurns', {}).get('zoomRatio', 0.8)
+        ken_burns_direction = visual_effects.get('kenBurns', {}).get('direction', 'zoom_in')
+        
+        # Visual Effects - Color Grading
+        color_grading_enabled = visual_effects.get('colorGrading', {}).get('enabled', False)
+        brightness = visual_effects.get('colorGrading', {}).get('brightness', 0)
+        contrast = visual_effects.get('colorGrading', {}).get('contrast', 0)
+        saturation = visual_effects.get('colorGrading', {}).get('saturation', 0)
+        warmth = visual_effects.get('colorGrading', {}).get('warmth', 0)
+        
+        # Visual Effects - Overlays
+        face_overlay_enabled = visual_effects.get('overlays', {}).get('faceOverlay', True)
+        particles_enabled = visual_effects.get('overlays', {}).get('particles', False)
+        vignette_enabled = visual_effects.get('overlays', {}).get('vignette', False)
+        
+        # Text Styling
+        text_enabled = text_styles.get('enabled', True)
+        text_position = text_styles.get('position', 'top')
+        text_font_size = text_styles.get('fontSize', 100)
+        text_font_family = text_styles.get('fontFamily', 'Arial')
+        text_base_color = text_styles.get('baseColor', '#ffffff')
+        text_highlight_color = text_styles.get('highlightColor', '#ffe066')
+        text_highlight_text_color = text_styles.get('highlightTextColor', '#000000')
+        text_border_color = text_styles.get('borderColor', '#ffae00')
+        text_border_width = text_styles.get('borderWidth', 4)
+        
+        # Audio Settings
+        background_music_enabled = audio_settings.get('backgroundMusic', False)
+        music_volume = audio_settings.get('musicVolume', 0.3)
+        voice_volume = audio_settings.get('voiceVolume', 1.0)
+        
+        # Calculate video dimensions based on aspect ratio
+        aspect_ratio_dimensions = {
+            'youtube_short': (1080, 1920),      # 9:16
+            'instagram_feed': (1080, 1080),     # 1:1
+            'instagram_story': (1080, 1920),    # 9:16
+            'facebook': (1200, 630)             # 16:9
+        }
+        video_width, video_height = aspect_ratio_dimensions.get(aspect_ratio, (1080, 1920))
+        
+        # Log configuration for debugging
+        logging.info(f"🎨 Video Effects Config Applied:")
+        logging.info(f"  - Aspect Ratio: {aspect_ratio} ({video_width}x{video_height})")
+        logging.info(f"  - Image Duration: {image_duration}s")
+        logging.info(f"  - Transition: {transition_type} ({transition_duration}s)")
+        logging.info(f"  - Ken Burns: {'Enabled' if ken_burns_enabled else 'Disabled'} ({ken_burns_direction}, {ken_burns_zoom})")
+        logging.info(f"  - Color Grading: {'Enabled' if color_grading_enabled else 'Disabled'}")
+        logging.info(f"  - Text Overlay: {'Enabled' if text_enabled else 'Disabled'} at {text_position}")
+        
+        # ========== End of Configuration Extraction ==========
         
         # Use frontend data instead of generating
         ai_data = {
@@ -497,18 +681,20 @@ def generate_video_from_frontend(script_data: dict, voiceover_data: dict,
         if progress_callback:
             progress_callback(4, "Creating video clips from images...")
         
-        # Create ImageClip objects with base composite (reuse existing logic)
+        # Create ImageClip objects with base composite using user-selected settings
         raw_clips = []
         for i, p in enumerate(image_paths):
             try:
                 img_clip = ImageClip(p)
                 img_clip = fit_to_screen(img_clip)
+                
+                # Use user-selected image duration and video size
                 base_clip = create_base_composite_clip(
                     img_clip,
-                    duration=IMAGE_VIEW_DURATION,
+                    duration=image_duration,  # User-selected duration
                     background_color=(0, 0, 0),
                     overlays=None,
-                    size=CURRENT_SIZE
+                    size=(video_width, video_height)  # User-selected aspect ratio
                 )
                 raw_clips.append(base_clip)
                 clips_to_close.extend([img_clip, base_clip])
@@ -521,43 +707,76 @@ def generate_video_from_frontend(script_data: dict, voiceover_data: dict,
         if progress_callback:
             progress_callback(5, "Applying transitions and effects...")
         
-        # Apply transitions and effects (reuse existing logic)
+        # Apply transitions and effects with user settings
         audio_duration = AudioManager.get_audio_duration(voiceover_file_path)
-        final_clips = add_transitions(raw_clips)
+        
+        # Use user-selected transition settings instead of global constants
+        final_clips = add_transitions_with_config(
+            raw_clips, 
+            image_duration=image_duration,
+            transition_duration=transition_duration,
+            transition_type=transition_type,
+            transition_intensity=transition_intensity,  # Add intensity
+            ken_burns_enabled=ken_burns_enabled,
+            ken_burns_zoom=ken_burns_zoom,
+            ken_burns_direction=ken_burns_direction
+        )
         clips_to_close.extend(final_clips)
         
         if progress_callback:
             progress_callback(6, "Creating video composition...")
         
-        # Create main video
-        main_video = CompositeVideoClip(final_clips, size=CURRENT_SIZE)
+        # Create main video with user-selected aspect ratio
+        main_video = CompositeVideoClip(final_clips, size=(video_width, video_height))
         clips_to_close.append(main_video)
         
-        # Add overlays
+        # Apply vignette effect if enabled by user
+        if vignette_enabled:
+            try:
+                from moviepy.video.fx.vignette import vignette
+                logging.info("✨ Applying vignette effect (dark edges)")
+                main_video = main_video.with_effects([vignette(0.5)])  # 0.5 = medium intensity
+            except ImportError:
+                logging.warning("⚠️  Vignette effect not available (moviepy.video.fx.vignette not found)")
+            except Exception as e:
+                logging.error(f"⚠️  Could not apply vignette effect: {e}")
+        
+        # Add overlays (only if enabled by user)
         overlays = []
         
-        # Add face overlay
-        face_clip = add_face_overlay(audio_duration)
-        if face_clip:
-            clips_to_close.append(face_clip)
-            overlays.append(face_clip.with_layer(1))
+        # Add face overlay (only if enabled)
+        if face_overlay_enabled:
+            face_clip = add_face_overlay(audio_duration)
+            if face_clip:
+                clips_to_close.append(face_clip)
+                overlays.append(face_clip.with_layer(1))
         
         if progress_callback:
             progress_callback(7, "Adding text overlays and synchronization...")
         
-        # Add text overlays if transcript available
-        if voice_segments and "segments" in voice_segments:
+        # Add text overlays if transcript available (only if enabled by user)
+        if text_enabled and voice_segments and "segments" in voice_segments:
             font_style = BASE_DIR / 'fonts/opensans/opensans.ttf'
+            logging.info(f"🎨 Applying custom text colors: base={text_base_color}, highlight={text_highlight_color}, border={text_border_color}")
             word_clips = create_first5_words_highlighted_clips(
-                voice_segments["segments"], size=CURRENT_SIZE, font=str(font_style)
+                voice_segments["segments"], 
+                size=(video_width, video_height), 
+                font=str(font_style),
+                font_size=text_font_size,  # Use user's font size
+                base_color=text_base_color,  # Use user's base color
+                highlight_color=text_highlight_color,  # Use user's highlight bg color
+                highlight_text_color=text_highlight_text_color,  # Use user's highlight text color
+                border_color=text_border_color,  # Use user's border color
+                border_width=text_border_width,  # Use user's border width
+                position=('center', text_position)  # Use user's position
             )
             for txt_clip in word_clips:
                 overlays.append(txt_clip)
                 clips_to_close.append(txt_clip)
         
-        # Compose final video with overlays
+        # Compose final video with overlays using user-selected size
         if overlays:
-            main_video = CompositeVideoClip([*final_clips, *overlays], size=CURRENT_SIZE)
+            main_video = CompositeVideoClip([*final_clips, *overlays], size=(video_width, video_height))
             clips_to_close.append(main_video)
         
         if progress_callback:

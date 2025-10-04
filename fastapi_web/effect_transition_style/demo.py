@@ -101,7 +101,7 @@ def build_demo_video(sources, out_path="demo.mp4", size=(720,720), total_duratio
 
     for i in range(len(sources)-1):
         transition_cls = transitions[transition_idx % len(transitions)]
-        transition = transition_cls([sources[i], sources[i+1]], duration=2, size=size)
+        transition = transition_cls(sources=[sources[i], sources[i+1]], duration=2, size=size)
         clips.append(transition.build())
         transition_idx += 1
 

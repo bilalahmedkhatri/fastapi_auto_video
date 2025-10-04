@@ -455,6 +455,7 @@ def _generate_video_from_frontend_data(frontend_data: dict, video_id: str, user_
         voiceover_data=frontend_data.get('voiceover_data', {}),
         social_media_data=frontend_data.get('social_media_data', {}),
         media_data=frontend_data.get('media_data', {}),
+        video_effects_config=frontend_data.get('video_effects_config', {}),
         user_id=user_id,
         video_id=video_id,
         progress_callback=detailed_progress_callback
