@@ -92,9 +92,14 @@ const VideoEffectsEditor = ({
 
   const aspectRatios = {
     'youtube_short': { label: 'YouTube Shorts', size: '9:16', resolution: '1080×1920' },
-    'instagram_feed': { label: 'Instagram Feed', size: '1:1', resolution: '1080×1080' },
+    'youtube_standard': { label: 'YouTube Standard', size: '16:9', resolution: '1920×1080' },
     'instagram_story': { label: 'Instagram Story', size: '9:16', resolution: '1080×1920' },
-    'facebook': { label: 'Facebook Video', size: '16:9', resolution: '1200×630' }
+    'instagram_feed': { label: 'Instagram Feed', size: '1:1', resolution: '1080×1080' },
+    'facebook_story': { label: 'Facebook Story', size: '9:16', resolution: '1080×1920' },
+    'facebook': { label: 'Facebook Video', size: '16:9', resolution: '1200×630' },
+    'tiktok': { label: 'TikTok', size: '9:16', resolution: '1080×1920' },
+    'linkedin': { label: 'LinkedIn', size: '16:9', resolution: '1920×1080' },
+    'snapshot': { label: 'Snapchat', size: '9:16', resolution: '1080×1920' }
   };
 
   const transitionTypes = {
@@ -359,6 +364,22 @@ const VideoEffectsEditor = ({
                     </button>
                   ))}
                 </div>
+                {/* Slide direction selector, only show if slide is selected */}
+                {visualEffects.transitions.type === 'slide' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slide Direction</label>
+                    <select
+                      value={visualEffects.transitions.slideDirection || 'left'}
+                      onChange={e => updateVisualEffects('transitions', 'slideDirection', e.target.value)}
+                      className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-600"
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                      <option value="up">Up</option>
+                      <option value="down">Down</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Overlays */}

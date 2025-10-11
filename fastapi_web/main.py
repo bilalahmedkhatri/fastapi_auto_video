@@ -1,4 +1,4 @@
-import uvicorn, json, uuid, logging, time
+import uvicorn, json, uuid, logging, time, os, mimetypes
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query, Response, status, Request, Body, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Dict, Any, List
@@ -6,6 +6,9 @@ from sqlmodel import Session, select
 from models.db_models import VideoCreationRequest, Video, engine, create_db_and_tables, get_session
 from datetime import datetime
 from celery_app import generate_video as generate_video_task, celery_app, VideoProcessingState, redis_client
+from fastapi.staticfiles import StaticFiles
+from fastapi import Response
+from fastapi.responses import FileResponse
 
 # Import script generator API
 try:
@@ -129,9 +132,7 @@ app.add_middleware(
 )
 
 # Static file serving for voice samples
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
+
 
 # Mount static files for voice samples
 app.mount("/api/voice-samples", StaticFiles(directory="media/voice-samples"), name="voice-samples")
@@ -745,8 +746,20 @@ async def create_video(
                     "duration": new_video.duration
                 }
                 
-                # Call the Celery task with correct parameters
-                task = generate_video_task.delay(new_video.user_id, video_settings)
+                # Prepare frontend data from content_data if available
+                frontend_data = None
+                if snake_case_data.get("content_data"):
+                    frontend_data = snake_case_data["content_data"]
+                    logger.info(f"✅ Frontend data available - using provided script/voiceover/media")
+                else:
+                    logger.info(f"⚠️  No frontend data - will use traditional AI generation")
+                
+                # Call the Celery task with frontend data
+                task = generate_video_task.delay(
+                    new_video.user_id, 
+                    video_settings, 
+                    frontend_data=frontend_data
+                )
                 logger.info(f"Celery task started with ID: {task.id}")
                 
                 # Optionally store task ID in database for tracking
@@ -799,86 +812,6 @@ async def delete_video(video_id: str, user_id: str, session: Session = Depends(g
     
     # Return no content
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-# ===== NEW ENDPOINTS FOR VIDEO DISPLAY COMPONENT =====
-
-@app.get("/api/videos/{video_id}", response_model=Dict[str, Any])
-async def get_video_details(
-    video_id: str, 
-    user_id: Optional[str] = None,
-    session: Session = Depends(get_session)
-):
-    """
-    Get complete video details including metadata and frontend_data for display component.
-    """
-    video = session.get(Video, video_id)
-    if not video:
-        raise HTTPException(status_code=404, detail=f"Video with ID {video_id} not found")
-    
-    # Optional user ownership check
-    if user_id and video.user_id != user_id:
-        raise HTTPException(status_code=403, detail="You don't have permission to access this video")
-    
-    # Parse content_data if it exists
-    frontend_data = {}
-    if video.content_data:
-        try:
-            frontend_data = json.loads(video.content_data)
-        except json.JSONDecodeError:
-            logger.warning(f"Invalid JSON in content_data for video {video_id}")
-            frontend_data = {}
-    
-    # Construct video URL - adjust path as needed for your file storage
-    video_url = None
-    if video.output_url:
-        # If output_url is already a full URL, use it directly
-        if video.output_url.startswith(('http://', 'https://')):
-            video_url = video.output_url
-        else:
-            # Construct local file URL
-            video_url = f"/api/videos/{video_id}/file"
-    
-    # Build thumbnail URL
-    thumbnail_url = None
-    if video.thumbnail:
-        if video.thumbnail.startswith(('http://', 'https://')):
-            thumbnail_url = video.thumbnail
-        else:
-            thumbnail_url = f"/api/videos/{video_id}/thumbnail"
-    
-    return {
-        "id": video.id,
-        "title": video.title,
-        "description": video.description,
-        "video_url": video_url,
-        "thumbnail_url": thumbnail_url,
-        "duration": video.duration,
-        "resolution": video.resolution,
-        "format": video.format,
-        "content_type": video.content_type,
-        "style": video.style,
-        "status": video.status,
-        "created_at": video.created_at.isoformat(),
-        "updated_at": video.updated_at.isoformat(),
-        "user_id": video.user_id,
-        "frontend_data": frontend_data,
-        # Include all other fields that might be useful
-        "audio_type": video.audio_type,
-        "aspect_ratio": video.aspect_ratio,
-        "fps": video.fps,
-        "quality": video.quality,
-        "use_ai": video.use_ai,
-        "include_audio": video.include_audio,
-        "music_type": video.music_type,
-        "target_audience": video.target_audience,
-        "script": video.script,
-        "error_message": video.error_message if video.status == "failed" else None
-    }
-
-from fastapi import Response
-from fastapi.responses import FileResponse
-import os
-import mimetypes
 
 @app.get("/api/videos/{video_id}/file")
 async def get_video_file(

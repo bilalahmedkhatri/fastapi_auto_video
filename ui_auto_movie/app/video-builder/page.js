@@ -1498,7 +1498,7 @@ const ScriptGeneratorPage = () => {
             store.setCurrentStep(STEPS.VIDEO_PREVIEW);
             toast.success('Video generation completed!');
           }}
-          onBack={() => store.setCurrentStep(STEPS.VIDEO_EFFECTS)}
+          onBack={() => store.setCurrentStep(STEPS.MEDIA)}
           onError={(error) => {
             console.error('Video generation error:', error);
             toast.error(`Video generation failed: ${error.message}`);

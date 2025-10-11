@@ -304,6 +304,13 @@ def generate_ai_keywords_and_tags(script_data: Dict[str, Any], platforms: List[s
             hashtags = list(dict.fromkeys(hashtags))[:15]
             seo_keywords = list(dict.fromkeys(seo_keywords))[:10]
             
+            # CRITICAL FIX: Ensure we always return valid keywords (never empty)
+            if not seo_keywords:
+                # Fallback to extracting keywords from topic
+                topic_words = [word.strip() for word in topic.lower().split() if len(word.strip()) > 3]
+                seo_keywords = topic_words[:5] + ["video", "content", "tutorial"]
+                seo_keywords = list(dict.fromkeys(seo_keywords))[:10]
+            
             # Generate script tags (content-related tags)
             script_tags = [
                 script_data.get('category', '').lower(),
@@ -314,6 +321,7 @@ def generate_ai_keywords_and_tags(script_data: Dict[str, Any], platforms: List[s
             script_tags = [tag for tag in script_tags if tag]  # Remove empty tags
             
             logging.info(f"AI generated {len(seo_keywords)} SEO keywords and {len(hashtags)} hashtags for topic: {topic}")
+            logging.info(f"SEO Keywords: {seo_keywords}")
             
             return {
                 "seo_keywords": seo_keywords,
@@ -430,15 +438,25 @@ Share if you found this helpful! 🔄"""
         # seo_keywords=[script_data.get('category', 'general'), "content", "video", "tutorial", "guide"]
         
         # Use AI-generated keywords and merge with platform-specific hashtags
+        # CRITICAL FIX: Ensure seo_keywords is always a list, never None or empty
         platform_seo_keywords = ai_keywords_data.get('seo_keywords', [])
+        if not platform_seo_keywords or not isinstance(platform_seo_keywords, list):
+            # Fallback to basic keywords if AI didn't generate any
+            platform_seo_keywords = [
+                script_data.get('category', 'general'),
+                script_data.get('script_type', 'video'),
+                "content", "tutorial", "guide", "educational"
+            ]
+        
         platform_hashtags = list(set(hashtags + ai_keywords_data.get('hashtags', [])[:10]))  # Merge and limit
         
+        # IMPORTANT: Explicitly add seo_keywords to each platform object
         platform_descriptions.append(PlatformDescription(
             platform=platform,
             title=title,
             description=description,
             hashtags=platform_hashtags,
-            seo_keywords=platform_seo_keywords
+            seo_keywords=platform_seo_keywords  # ⭐ This ensures keywords are in platform object
         ))
     
     # Generate thumbnail suggestions
@@ -525,8 +543,20 @@ async def generate_social_media_content_endpoint(request: SocialMediaRequest, db
         # Generate social media content
         content_data = generate_social_media_content(script_data, request.platforms)
         
+        # DEBUG: Log the generated content to verify seo_keywords are present
+        logging.info(f"Generated social media content with {len(content_data['platform_descriptions'])} platforms")
+        for idx, platform_desc in enumerate(content_data['platform_descriptions']):
+            platform_obj = platform_desc if isinstance(platform_desc, dict) else platform_desc.dict()
+            logging.info(f"Platform {idx} ({platform_obj.get('platform')}): "
+                        f"hashtags={len(platform_obj.get('hashtags', []))}, "
+                        f"seo_keywords={len(platform_obj.get('seo_keywords', []))} - {platform_obj.get('seo_keywords', [])[:3]}")
+        
         # Convert to response model
         response = SocialMediaResponse(**content_data)
+        
+        # DEBUG: Verify response model has keywords
+        logging.info(f"Response model: general_seo_keywords={response.general_seo_keywords[:5] if response.general_seo_keywords else 'EMPTY'}")
+        logging.info(f"Response model: platform_descriptions[0].seo_keywords={response.platform_descriptions[0].seo_keywords[:5] if response.platform_descriptions and response.platform_descriptions[0].seo_keywords else 'EMPTY'}")
         
         # Store in database if available
         if SocialMediaContent and db:

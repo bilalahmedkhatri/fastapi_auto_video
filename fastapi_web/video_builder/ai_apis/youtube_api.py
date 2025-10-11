@@ -8,7 +8,7 @@ from .api_utils import Authentication
 from sys import path
 # path.append(str(Path(__file__).resolve().parent.parent.parent))
 # from ..utils import FileDirectory, BASE_DIR
-from ai_apis.api_utils import ErrorLogger
+from .api_utils import ErrorLogger
 import sys
 
 # If modifying these SCOPES, delete the file token.pickle.

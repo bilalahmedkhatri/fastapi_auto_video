@@ -4,15 +4,16 @@ from celery import Celery
 from dotenv import load_dotenv
 import redis
 from models.db_models import Video, get_session
+from video_builder.frontend_request.frontend_video_form import generate_video_from_frontend
 
 # Import video builder function at module level
-try:
-    from video_builder.video_builder import generate_video_from_frontend
-    VIDEO_BUILDER_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: Could not import video_builder: {e}")
-    VIDEO_BUILDER_AVAILABLE = False
-    generate_video_from_frontend = None
+# try:
+#     from .video_builder.frontend_request.frontend_video_form import generate_video_from_frontend
+#     VIDEO_BUILDER_AVAILABLE = True
+# except ImportError as e:
+#     print(f"Warning: Could not import video_builder: {e}")
+#     VIDEO_BUILDER_AVAILABLE = False
+#     generate_video_from_frontend = None
 
 # Load environment variables from a .env file if present
 load_dotenv()
@@ -397,8 +398,8 @@ def _generate_video_from_frontend_data(frontend_data: dict, video_id: str, user_
     """
     Generate video using frontend-provided data (scripts, voiceover, media, etc.)
     """
-    if not VIDEO_BUILDER_AVAILABLE:
-        raise ImportError("video_builder module is not available")
+    # if not VIDEO_BUILDER_AVAILABLE:
+    #     raise ImportError("video_builder module is not available")
     
     if not generate_video_from_frontend:
         raise ImportError("generate_video_from_frontend function is not available")
@@ -455,7 +456,6 @@ def _generate_video_from_frontend_data(frontend_data: dict, video_id: str, user_
         voiceover_data=frontend_data.get('voiceover_data', {}),
         social_media_data=frontend_data.get('social_media_data', {}),
         media_data=frontend_data.get('media_data', {}),
-        video_effects_config=frontend_data.get('video_effects_config', {}),
         user_id=user_id,
         video_id=video_id,
         progress_callback=detailed_progress_callback

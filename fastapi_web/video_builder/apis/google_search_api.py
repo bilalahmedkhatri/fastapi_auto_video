@@ -5,10 +5,9 @@ from pathlib import Path
 import sys
 import os, re, requests, random, time
 
-# Add the parent directory to the Python path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import FileDirectory
-from ai_apis.text_gen_api import TextGenAPI
+# Imports from video_builder package
+from video_builder.utils import FileDirectory
+from video_builder.ai_apis.text_gen_api import TextGenAPI
 from PIL import Image
 
 # Load environment variables from .env file

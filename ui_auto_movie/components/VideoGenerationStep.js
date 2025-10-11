@@ -23,6 +23,7 @@ const VideoGenerationStep = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [showProcessingScreen, setShowProcessingScreen] = useState(false);
   const [backgroundMode, setBackgroundMode] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); // Track if generation has been initiated
 
   // Helper function to extract audio file path from voiceover data
   const getAudioFilePath = (voiceoverData) => {
@@ -110,7 +111,14 @@ const VideoGenerationStep = ({
 
   // Start video generation
   const startVideoGeneration = async () => {
+    // Prevent duplicate generation attempts
+    if (hasStarted || isGenerating) {
+      console.warn('⚠️ Video generation already in progress, skipping duplicate call');
+      return;
+    }
+    
     try {
+      setHasStarted(true); // Mark as started
       setIsGenerating(true);
       setCurrentStatus('Starting video generation...');
       
@@ -221,6 +229,7 @@ const VideoGenerationStep = ({
     } catch (error) {
       console.error('Error starting video generation:', error);
       setIsGenerating(false);
+      setHasStarted(false); // Reset flag on error to allow retry
       toast.error(`Failed to start video generation: ${error.message}`);
       setCurrentStatus(`Error: ${error.message}`);
       if (onError) onError(error);
@@ -399,12 +408,13 @@ const VideoGenerationStep = ({
     pollProgress();
   };
 
-  // Auto-start generation when component mounts
+  // Auto-start generation when component mounts (only once)
   useEffect(() => {
-    if (!isGenerating && !taskId) {
+    if (!hasStarted && !isGenerating && !taskId) {
+      console.log('🚀 Auto-starting video generation from useEffect');
       startVideoGeneration();
     }
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once
 
   // Show processing screen when video generation starts
   if (showProcessingScreen && videoId) {
@@ -529,15 +539,6 @@ const VideoGenerationStep = ({
           >
             ← Back to Effects
           </button>
-          
-          {!isGenerating && progress < 100 && (
-            <button
-              onClick={startVideoGeneration}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all"
-            >
-              {backgroundMode ? '🚀 Start in Background' : '🔄 Start Generation'}
-            </button>
-          )}
         </div>
       </div>
     </div>

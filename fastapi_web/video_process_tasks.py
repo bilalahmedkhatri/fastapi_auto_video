@@ -562,12 +562,18 @@ def render_final_video_task(self, process_id: int, all_data: Dict[str, Any]) -> 
             quality_score=0.92
         )
         
+
         # Mark entire process as completed
         manager.mark_completion(
             video_id=final_video_data["output_file"],
             final_quality_score=0.92
         )
-        
+
+        # Immediately clean up this process
+        from models.video_process_manager import cleanup_old_processes
+        session = next(get_session())
+        cleanup_old_processes(session, days_old=0)
+
         return {
             "status": "completed",
             "data": final_video_data,

@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useVideoBuilderStore } from '@/stores/useVideoBuilderStore';
 import { useMediaProcessing } from '@/hooks/useMediaProcessing';
+import { searchInternetMedia } from '@/lib/api/mediaApi';
 
 const MediaManager = ({ 
   onNext, 
@@ -51,6 +52,8 @@ const MediaManager = ({
     if (socialMediaContent && socialMediaContent.platform_descriptions) {
       const allTags = [];
       const allKeywords = [];
+
+      console.log('socialMediaContent:', socialMediaContent);
       
       socialMediaContent.platform_descriptions.forEach(platform => {
         if (platform.hashtags) {
@@ -439,81 +442,106 @@ const MediaManager = ({
     });
   };
 
-  // Handle media search
+  // Unified media search handler - handles both regular search and curated search
+  const performMediaSearch = async ({
+    query,
+    platforms = ['pexels'],
+    per_page = 15,
+    resultHandler,
+    errorMessage = 'Search failed'
+  }) => {
+    try {
+      const data = await searchInternetMedia({
+        query: query.trim(),
+        platforms,
+        media_type: 'both',
+        tags: searchTags,
+        keywords: searchKeywords,
+        per_page
+      });
+      
+      if (data.status === 'no_results') {
+        toast(`No results found for "${query}"`, {
+          icon: 'ℹ️'
+        });
+        return null;
+      }
+      
+      // Call the result handler to process results
+      resultHandler(data);
+      
+      // Show success message with platform info
+      const platformsUsed = data.platforms_searched.join(', ');
+      toast.success(`Found ${data.total_results} results from ${platformsUsed}`);
+      
+      // Show any platform errors as warnings
+      if (data.errors && Object.keys(data.errors).length > 0) {
+        const errorMessages = Object.entries(data.errors)
+          .map(([platform, error]) => `${platform}: ${error}`)
+          .join('; ');
+        toast(`Platform issues: ${errorMessages}`, {
+          icon: '⚠️'
+        });
+      }
+      
+      return data;
+      
+    } catch (error) {
+      console.error('Media search error:', error);
+      toast.error(`${errorMessage}: ${error.message}`);
+      return null;
+    }
+  };
+
+  // Handle media search (multi-platform stock search)
   const handleSearch = async () => {
-    if (!searchQuery.trim() && searchTags.length === 0 && searchKeywords.length === 0) {
+    // If no search query, use SEO keywords as search terms
+    let searchTerm = searchQuery.trim();
+    
+    if (!searchTerm && searchKeywords.length === 0 && searchTags.length === 0) {
       toast.error('Please enter a search query or select tags/keywords');
       return;
+    }
+    
+    // AUTO-SEARCH: If no text input, use SEO keywords
+    if (!searchTerm && searchKeywords.length > 0) {
+      // Use first 3 keywords as search query
+      searchTerm = searchKeywords.slice(0, 3).join(' ');
+      toast(`🔍 Searching with SEO keywords: "${searchTerm}"`, {
+        icon: '💡',
+        duration: 3000
+      });
+    } else if (!searchTerm && searchTags.length > 0) {
+      // Fallback to tags if no keywords available
+      searchTerm = searchTags.slice(0, 3).join(' ');
+      toast(`🔍 Searching with tags: "${searchTerm}"`, {
+        icon: '🏷️',
+        duration: 3000
+      });
     }
 
     setIsSearching(true);
     
-    try {
-      // Call backend API for internet media search
-      const response = await fetch('http://localhost:8000/api/media/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: searchQuery.trim(),
-          platforms: ['pexels', 'google'], // Search both Pexels and Google
-          media_type: 'both', // Search for both images and videos
-          tags: searchTags,
-          keywords: searchKeywords,
-          per_page: 15,
-          orientation: null // No orientation filter for now
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'no_results') {
-        toast(`No results found for "${data.query}"`, {
-          icon: 'ℹ️'
-        });
-        store.setSearchResults([]);
-      } else {
+    await performMediaSearch({
+      query: searchTerm,
+      platforms: ['pexels', 'google'], // Search both Pexels and Google
+      per_page: 15,
+      resultHandler: (data) => {
         // Add tags and keywords to results
         const enrichedResults = data.results.map(result => ({
           ...result,
           tags: searchTags.length > 0 ? searchTags : ['stock'],
           keywords: searchKeywords.length > 0 ? searchKeywords : []
         }));
-        
         store.setSearchResults(enrichedResults);
-        
-        // Show success message with platform info
-        const platformsUsed = data.platforms_searched.join(', ');
-        toast.success(`Found ${data.total_results} results from ${platformsUsed}`);
-        
-        // Show any platform errors as warnings
-        if (data.errors && Object.keys(data.errors).length > 0) {
-          const errorMessages = Object.entries(data.errors)
-            .map(([platform, error]) => `${platform}: ${error}`)
-            .join('; ');
-          toast(`Platform issues: ${errorMessages}`, {
-            icon: '⚠️'
-          });
-        }
-      }
-      
-      setIsSearching(false);
-    } catch (error) {
-      console.error('Media search error:', error);
-      setIsSearching(false);
-      toast.error(`Search failed: ${error.message}`);
-      
-      // Fallback to empty results
-      store.setSearchResults([]);
-    }
+      },
+      errorMessage: 'Search failed'
+    });
+    
+    setIsSearching(false);
   };
 
-  // Handle AI generation
+  // Handle AI generation (curated search with single platform)
   const handleAIGeneration = async () => {
     if (!aiPrompt.trim()) {
       toast.error('Please enter an AI generation prompt');
@@ -521,51 +549,26 @@ const MediaManager = ({
     }
 
     setIsGenerating(true);
-    try {
-      const response = await fetch('http://localhost:8000/api/media/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: aiPrompt.trim(),
-          platforms: ['pexels'],
-          media_type: 'both',
-          tags: searchTags,
-          keywords: searchKeywords,
-          per_page: 10
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`AI generation failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'no_results') {
-        toast(`No media found for "${aiPrompt}"`, {
-          icon: 'ℹ️'
-        });
-      } else {
+    
+    await performMediaSearch({
+      query: aiPrompt,
+      platforms: ['pexels'], // Focus on high-quality Pexels content only
+      per_page: 10,
+      resultHandler: (data) => {
+        // Mark results as "AI-generated" (curated search results)
         const generatedMedia = data.results.map(result => ({
           ...result,
           source: 'ai-generated',
           prompt: aiPrompt,
-          tags: ['ai', 'generated', ...(result.tags || [])],
+          tags: ['ai', 'curated', ...(result.tags || [])],
         }));
-        
         store.addGeneratedMedia(generatedMedia);
-        toast.success(`Generated ${generatedMedia.length} AI media items`);
-      }
-      
-      setAiPrompt('');
-      setIsGenerating(false);
-    } catch (error) {
-      console.error('AI generation error:', error);
-      setIsGenerating(false);
-      toast.error(`AI generation failed: ${error.message}`);
-    }
+      },
+      errorMessage: 'Curated search failed'
+    });
+    
+    setAiPrompt('');
+    setIsGenerating(false);
   };
 
   // Toggle media selection
@@ -647,7 +650,7 @@ const MediaManager = ({
           {[
             { id: 'upload', label: 'Upload', icon: '📁' },
             { id: 'search', label: 'Search', icon: '🔍' },
-            { id: 'ai-generate', label: 'AI Generate', icon: '🤖' }
+            { id: 'ai-generate', label: 'Curated Search', icon: '✨' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -840,7 +843,11 @@ const MediaManager = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for stock images and videos..."
+                  placeholder={
+                    searchKeywords.length > 0 
+                      ? `Search for stock media... (Leave empty to use ${searchKeywords.length} SEO keywords)`
+                      : "Search for stock images and videos..."
+                  }
                   className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
@@ -945,6 +952,11 @@ const MediaManager = ({
               <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
                 <p>🌐 Search across Unsplash, Pexels, Pixabay, and Shutterstock</p>
                 <p className="mt-1">💡 Tags and keywords are automatically generated from your social media content</p>
+                {searchKeywords.length > 0 && (
+                  <p className="mt-2 text-green-600 dark:text-green-400 font-medium">
+                    ✨ Quick Tip: Click Search without typing to use your {searchKeywords.length} SEO keywords automatically!
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -957,12 +969,12 @@ const MediaManager = ({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    AI Generation Prompt
+                    Curated Search Prompt
                   </label>
                   <textarea
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="Describe the image or video you want to generate..."
+                    placeholder="Describe the high-quality images or videos you're looking for..."
                     rows={4}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white resize-none"
                   />
@@ -976,20 +988,21 @@ const MediaManager = ({
                   {isGenerating ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Generating AI Media...
+                      Searching Curated Content...
                     </div>
                   ) : (
-                    '🤖 Generate with AI'
+                    '✨ Find Curated Media'
                   )}
                 </button>
               </div>
               
               <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-600">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-2">💡 AI Generation Tips:</h4>
+                <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-2">✨ Curated Search Tips:</h4>
                 <ul className="text-sm text-purple-700 dark:text-purple-300 space-y-1">
+                  <li>• This searches high-quality Pexels content only</li>
                   <li>• Be specific about style, colors, and composition</li>
                   <li>• Include context from your script for better results</li>
-                  <li>• Mention if you want realistic or artistic style</li>
+                  <li>• Results are professionally curated stock media</li>
                   <li>• For videos, describe the action or movement</li>
                 </ul>
               </div>
