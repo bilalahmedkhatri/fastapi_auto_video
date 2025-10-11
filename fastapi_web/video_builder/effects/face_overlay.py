@@ -1,9 +1,13 @@
 
-from video_builder.video_builder import file_directory, logger
+from video_builder.video_builder import file_directory
 from video_builder.core.config import base_dir
 from moviepy import ImageClip
 from moviepy.video.fx import Resize
 import random
+from celery.utils.log import get_task_logger
+
+# Create logger using Celery's task logger
+logger = get_task_logger(__name__)
 
 def add_face_overlay(audio_duration):
     """Add animated face overlay with MoviePy 2.x syntax"""

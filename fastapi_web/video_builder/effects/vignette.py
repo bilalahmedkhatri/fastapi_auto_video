@@ -1,5 +1,8 @@
 import numpy as np
-from video_builder import logger
+from celery.utils.log import get_task_logger
+
+# Create logger using Celery's task logger
+logger = get_task_logger(__name__)
 
 
 def add_vignette_effect(clip, intensity=0.5):

@@ -1,6 +1,8 @@
 import time, os, json
 from datetime import datetime
 from celery import Celery
+from celery.signals import after_setup_logger, after_setup_task_logger
+import logging
 from dotenv import load_dotenv
 import redis
 from models.db_models import Video, get_session
@@ -17,6 +19,35 @@ from video_builder.frontend_request.frontend_video_form import generate_video_fr
 
 # Load environment variables from a .env file if present
 load_dotenv()
+
+# Configure Celery logging
+@after_setup_logger.connect
+def setup_loggers(logger, *args, **kwargs):
+    """
+    Configure logging levels for different modules after Celery logger is set up.
+    This allows fine-grained control over log verbosity per module.
+    """
+    # Video builder core - detailed logging for main video generation
+    logging.getLogger('video_builder.video_builder').setLevel(logging.DEBUG)
+    logging.getLogger('video_builder.frontend_request').setLevel(logging.INFO)
+    
+    # Effects and transitions - less verbose (only warnings and errors)
+    logging.getLogger('video_builder.effects').setLevel(logging.WARNING)
+    logging.getLogger('video_builder.transitions').setLevel(logging.WARNING)
+    logging.getLogger('video_builder.tools').setLevel(logging.WARNING)
+    
+    # External libraries - suppress noisy output
+    logging.getLogger('moviepy').setLevel(logging.ERROR)
+    logging.getLogger('PIL').setLevel(logging.WARNING)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+    
+    logger.info("📋 Custom logging configuration applied")
+
+@after_setup_task_logger.connect
+def setup_task_logger(logger, *args, **kwargs):
+    """Configure logging for individual Celery tasks"""
+    # Task logger inherits from worker logger
+    logger.info("🔧 Task logger configured")
 
 # Redis connection for processing state management
 redis_client = redis.Redis(

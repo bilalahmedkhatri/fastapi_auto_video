@@ -1,5 +1,5 @@
 from video_builder.core.config import base_dir
-from video_builder.video_builder import AudioManager, fit_to_screen, logger
+from video_builder.video_builder import AudioManager, fit_to_screen
 from video_builder.effects.face_overlay import add_face_overlay
 from video_builder.effects.vignette import add_vignette_effect
 from moviepy import CompositeVideoClip, AudioFileClip, ImageClip
@@ -9,7 +9,10 @@ from video_builder.animation.text import create_first5_words_highlighted_clips
 from video_builder.tools.close_clip import close_clip_safe
 from video_builder.apis.google_search_api import download_images
 from pathlib import Path
-import logging
+from celery.utils.log import get_task_logger
+
+# Create logger using Celery's task logger
+logger = get_task_logger(__name__)
 
 
 def generate_video_from_frontend(script_data: dict, voiceover_data: dict, 

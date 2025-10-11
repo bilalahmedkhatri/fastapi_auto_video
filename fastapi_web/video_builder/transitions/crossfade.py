@@ -1,10 +1,9 @@
 ﻿from moviepy.video.fx import CrossFadeIn, CrossFadeOut
 from video_builder.effects.ken_burns import ken_burns_effect
-from video_builder.core.config import LoggerConfig
+from celery.utils.log import get_task_logger
 
-# Create logger for transitions module
-logger_config = LoggerConfig(user_name='transitions', log_user='video_processor')
-logger = logger_config.get_logger()
+# Create logger using Celery's task logger
+logger = get_task_logger(__name__)
 
 
 def add_transitions(clips):
