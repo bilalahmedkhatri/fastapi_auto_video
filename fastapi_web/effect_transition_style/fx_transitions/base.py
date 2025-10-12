@@ -32,3 +32,19 @@ class TransitionBase:
         for i in range(len(self.clips) - 1):
             results.append(self.build_transition(self.clips[i], self.clips[i+1]))
         return concatenate_videoclips(results, method="compose")
+    
+    def close(self):
+        """Clean up all clips to prevent Windows handle errors"""
+        for clip in self.clips:
+            try:
+                if hasattr(clip, 'close'):
+                    clip.close()
+            except Exception:
+                pass
+    
+    def __del__(self):
+        """Destructor to ensure cleanup"""
+        try:
+            self.close()
+        except Exception:
+            pass

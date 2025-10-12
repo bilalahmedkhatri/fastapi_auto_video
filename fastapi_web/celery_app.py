@@ -8,16 +8,6 @@ import redis
 from models.db_models import Video, get_session
 from video_builder.frontend_request.frontend_video_form import generate_video_from_frontend
 
-# Import video builder function at module level
-# try:
-#     from .video_builder.frontend_request.frontend_video_form import generate_video_from_frontend
-#     VIDEO_BUILDER_AVAILABLE = True
-# except ImportError as e:
-#     print(f"Warning: Could not import video_builder: {e}")
-#     VIDEO_BUILDER_AVAILABLE = False
-#     generate_video_from_frontend = None
-
-# Load environment variables from a .env file if present
 load_dotenv()
 
 # Configure Celery logging
