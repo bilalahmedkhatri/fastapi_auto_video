@@ -33,3 +33,15 @@ __pycache__/
 *.pyc
 media/
 user_hashes/
+
+
+# Ignore virtual environment directories
+venv/
+env/
+.venv/
+fastapp/
+media/
+
+
+
+# Ignore IDE specific files

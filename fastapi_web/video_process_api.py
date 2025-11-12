@@ -16,12 +16,10 @@ Endpoints:
 - DELETE /api/video-process/{process_id} - Cancel process
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-import json
 import asyncio
 
 from models.db_models import get_session
@@ -31,7 +29,6 @@ from video_process_tasks import (
     get_process_status_task,
     cleanup_completed_processes_task
 )
-from celery_app import celery_app
 
 
 # Pydantic models for request/response validation

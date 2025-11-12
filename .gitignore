@@ -58,9 +58,13 @@ env.bak/
 venv.bak/
 gen_vedio/
 pyvenv.cfg
+fastapi_web/fastweb/
+fastapi_web/fastweb/**
 
 # FastAPI / Uvicorn
 .uvicorn/
+fastapi_web/fastapp/
+fastapi_web/fastapp/**
 
 # Celery
 celerybeat-schedule

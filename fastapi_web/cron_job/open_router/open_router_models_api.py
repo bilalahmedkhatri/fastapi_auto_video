@@ -137,6 +137,8 @@ class OpenRouterModelsAPI:
         if context_length > 100000:
             tags.append('long-context')
         
+        self.logger.debug(f"Parsed model {model_id}: provider={provider}, is_free={is_free}, quality_score={quality_score}, tags={tags}")
+        
         return {
             'provider': provider,
             'model_name': model_id,
