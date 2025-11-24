@@ -58,7 +58,8 @@ class DatabaseConnectionManager:
             return True
             
         except Exception as e:
-            logger.debug(f"Connection test failed: {e}")
+            logger.error(f"❌ Connection test failed for {self._mask_password(connection_url)}: {str(e)}")
+            logger.debug(f"Full error: {repr(e)}")
             return False
     
     def _get_local_postgresql_url(self) -> Optional[str]:
@@ -204,12 +205,22 @@ class DatabaseConnectionManager:
 db_manager = DatabaseConnectionManager()
 
 # Establish connection on module import
-try:
-    engine, connection_type = db_manager.connect()
-    logger.info(f"🗄️  Database initialized: {connection_type.upper()} database")
-except Exception as e:
-    logger.error(f"Failed to initialize database: {e}")
-    raise
+# Allow skipping database connection for debugging by setting SKIP_DB_INIT=true
+skip_db = os.getenv('SKIP_DB_INIT', 'false').lower() == 'true'
+
+if skip_db:
+    logger.warning("⚠️  Database initialization skipped (SKIP_DB_INIT=true)")
+    engine = None
+else:
+    try:
+        engine, connection_type = db_manager.connect()
+        logger.info(f"🗄️  Database initialized: {connection_type.upper()} database")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        logger.error("💡 Tip: Check your .env file database credentials")
+        logger.error("💡 Tip: Ensure MySQL is running and database exists")
+        logger.error("💡 Tip: Try connecting manually: mysql -h HOST -u USER -p DATABASE")
+        raise
 
 
 def get_engine():
