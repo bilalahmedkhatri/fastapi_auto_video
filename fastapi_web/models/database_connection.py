@@ -76,9 +76,9 @@ class DatabaseConnectionManager:
         - MySQL: mysql+pymysql://username:password@host:port/database
         """
         # Try to get from environment variable first
-        cpanel_url = os.getenv('CPANEL_POSTGRESQL_DATABASE_URL') or os.getenv('CPANEL_MYSQL_DATABASE_URL')
-        if cpanel_url:
-            return cpanel_url
+        # cpanel_url = os.getenv('CPANEL_POSTGRESQL_DATABASE_URL') or os.getenv('CPANEL_MYSQL_DATABASE_URL')
+        # if cpanel_url:
+        #     return cpanel_url
         
         # Build from individual components if available
         host = os.getenv('CPANEL_DB_HOST', 'localhost')
