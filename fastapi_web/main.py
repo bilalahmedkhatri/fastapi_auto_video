@@ -1,115 +1,71 @@
-import uvicorn, json, uuid, logging, time, os, mimetypes
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query, Response, status, Request, Body, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, Dict, Any, List
-from sqlmodel import Session, select
-from models.db_models import VideoCreationRequest, Video, engine, create_db_and_tables, get_session
+"""
+Auto Video Generation API - Main Application
+
+FastAPI application for automated video generation with AI-powered features.
+Includes video creation, script generation, voiceover synthesis, and media processing.
+"""
+
+import uvicorn
+import logging
+import os
+import json
+import time
+import mimetypes
+import uuid
 from datetime import datetime
-from celery_app import generate_video as generate_video_task, celery_app, VideoProcessingState, redis_client
+from typing import Optional, Dict, Any, List
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query, Response, status, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi import Response
 from fastapi.responses import FileResponse
+from sqlmodel import Session, select
 
-# Import script generator API
-try:
-    from video_builder.script_api import router as script_router
-    from video_builder.voice_system.voice_controller import voice_router
-except ImportError:
-    # Fallback if import fails
-    logging.warning("Failed to import script generator API or voice system")
-    script_router = None
-    voice_router = None
+from models.db_models import VideoCreationRequest, Video, create_db_and_tables, get_session
+from celery_app import generate_video as generate_video_task, celery_app, VideoProcessingState, redis_client
+from routes import load_routers
+from ws_realtime.simple_manager import connect_websocket, disconnect_websocket
 
-# Import script API for database operations
-try:
-    from script_api import router as scripts_db_router
-except ImportError:
-    # Fallback if import fails
-    logging.warning("Failed to import scripts database API")
-    scripts_db_router = None
-
-# Import voiceover API
-try:
-    from voiceover_api import voiceover_router
-except ImportError:
-    # Fallback if import fails
-    logging.warning("Failed to import voiceover API")
-    voiceover_router = None
-
-# Import media processing API
-try:
-    from media_api import router as media_router
-except ImportError:
-    # Fallback if import fails
-    logging.warning("Failed to import media processing API")
-    media_router = None
-
-# Import video process API
-try:
-    from video_process_api import video_process_router
-except ImportError:
-    # Fallback if import fails
-    logging.warning("Failed to import video process API")
-    video_process_router = None
-
-# Import WebSocket routes
-try:
-    from ws_realtime.routes import websocket_router
-except ImportError:
-    # Fallback if import fails
-    logging.warning("Failed to import WebSocket routes")
-    websocket_router = None
-
-# Configure global logging for the entire application (including Uvicorn)
+# Configure logging
 logging.basicConfig(
-    level=logging.INFO, 
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/auto_video.log'),  # Use the correct log file path
-        logging.StreamHandler()  # Also log to console
+        logging.FileHandler('logs/auto_video.log'),
+        logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Auto Video Generation API")
+# Initialize FastAPI app
+app = FastAPI(
+    title="Auto Video Generation API",
+    description="AI-powered automated video generation platform",
+    version="1.0.0"
+)
 
-# Include script generator router if available
-if script_router:
-    app.include_router(script_router)
-    logger.info("Script generator API routes added")
+# Configure CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Include voice system router if available
-if voice_router:
-    app.include_router(voice_router)
-    logger.info("Voice system API routes added")
+# Mount static file directories
+app.mount("/api/voice-samples", StaticFiles(directory="media/voice-samples"), name="voice-samples")
+app.mount("/api/voices/samples", StaticFiles(directory="media/voice-samples"), name="voices-samples-alias")
+app.mount("/api/audio", StaticFiles(directory="media/audio"), name="generated-audio")
+app.mount("/media", StaticFiles(directory="media"), name="media-files")
 
-# Include scripts database router if available
-if scripts_db_router:
-    app.include_router(scripts_db_router)
-    logger.info("Scripts database API routes added")
+# Load all routers from configuration
+loaded_count = load_routers(app)
 
-# Include voiceover router if available
-if voiceover_router:
-    app.include_router(voiceover_router)
-    logger.info("Voiceover API routes added")
 
-# Include media processing router if available
-if media_router:
-    app.include_router(media_router)
-    logger.info("Media processing API routes added")
-
-# Include video process router if available
-if video_process_router:
-    app.include_router(video_process_router)
-    logger.info("Video process API routes added")
-
-# Include WebSocket router if available  
-if websocket_router:
-    app.include_router(websocket_router)
-    logger.info("WebSocket routes added")
-
-# Add simple WebSocket endpoints directly
-from ws_realtime.simple_manager import connect_websocket, disconnect_websocket, send_video_update
+# ============================================================================
+# WebSocket Endpoints
+# ============================================================================
 
 @app.websocket("/ws/video-process")
 async def websocket_video_process(websocket: WebSocket, user_id: str = "demo_user"):
@@ -122,53 +78,35 @@ async def websocket_video_process(websocket: WebSocket, user_id: str = "demo_use
     except WebSocketDisconnect:
         disconnect_websocket(websocket, user_id)
 
-# Configure CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],  # Add your frontend URLs
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Static file serving for voice samples
-
-
-# Mount static files for voice samples
-app.mount("/api/voice-samples", StaticFiles(directory="media/voice-samples"), name="voice-samples")
-
-# Mount static files for generated audio files
-app.mount("/api/audio", StaticFiles(directory="media/audio"), name="generated-audio")
-
-# Alternative endpoint for individual voice sample files
-@app.get("/api/voice-samples/{filename}")
-async def get_voice_sample(filename: str):
-    """Serve voice sample files"""
-    file_path = f"media/voice-samples/{filename}"
-    if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="audio/wav")
-    else:
-        logger.warning(f"Voice sample file not found: {file_path}")
-        raise HTTPException(status_code=404, detail="Voice sample not found")
-
-# Alternative endpoint for generated audio files
-@app.get("/api/audio/{filename}")
-async def get_generated_audio(filename: str):
-    """Serve generated audio files"""
-    file_path = f"media/audio/{filename}"
-    if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="audio/wav")
-    else:
-        logger.warning(f"Generated audio file not found: {file_path}")
-        raise HTTPException(status_code=404, detail="Generated audio file not found")
+# ============================================================================
+# Lifecycle Events
+# ============================================================================
 
 @app.on_event("startup")
-def on_startup():
-    # Create database tables on startup
+async def on_startup():
+    """Initialize application on startup"""
     create_db_and_tables()
-    logger.info("Application started and database initialized")
+    logger.info(f"Application started - {loaded_count} routers loaded")
+    
+    # Run voice sample check in background
+    from server_starting_apps.startup_tasks import startup_voice_sample_check
+    await startup_voice_sample_check()
+    
+    # Preload Kokoro model for faster voiceover generation
+    logger.info("🔄 Warming up Kokoro voice model...")
+    try:
+        from kokoro_82M.model_cache import get_cached_generator
+        get_cached_generator()  # Loads model into memory (~8 seconds)
+        logger.info("✅ Kokoro model ready - voiceover requests will be fast!")
+    except Exception as e:
+        logger.error(f"⚠️ Failed to preload Kokoro model: {e}")
+        logger.error("Voice generation will work but first request will be slower")
 
-# Placeholder for your actual video creation function
+
+# ============================================================================
+# Helper Functions (TODO: Move to services layer)
+# ============================================================================
 async def generate_video(video_id: str, session: Session):
     """
     This function contains the actual video creation logic.
@@ -218,6 +156,10 @@ async def generate_video(video_id: str, session: Session):
     finally:
         session.close()
 
+
+# ============================================================================
+# Video Status & Processing Endpoints
+# ============================================================================
 
 @app.get("/api/videos/status/{video_id}", response_model=Dict[str, Any])
 async def get_video_status(video_id: str, user_id: Optional[str] = None, session: Session = Depends(get_session)):
@@ -269,6 +211,10 @@ async def get_video_status(video_id: str, user_id: Optional[str] = None, session
         result["error"] = video.error_message
         
     return result
+
+# ============================================================================
+# Celery Task Management Endpoints
+# ============================================================================
 
 @app.get("/api/celery/task/{task_id}")
 async def get_task_status(task_id: str):
@@ -532,6 +478,10 @@ async def get_video_processing_history(video_id: str):
         logger.error(f"Error getting processing history for video {video_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting processing history: {str(e)}")
 
+# ============================================================================
+# Redis Processing State Endpoints
+# ============================================================================
+
 @app.delete("/api/videos/{video_id}/processing-state")
 async def clear_video_processing_state(video_id: str):
     """Manually clear Redis processing state (admin endpoint)"""
@@ -600,6 +550,10 @@ async def get_redis_processing_video(video_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting Redis state: {str(e)}")
 
+
+# ============================================================================
+# Video CRUD Endpoints
+# ============================================================================
 
 @app.get("/api/videos", response_model=List[Dict[str, Any]])
 async def list_videos(
@@ -812,6 +766,10 @@ async def delete_video(video_id: str, user_id: str, session: Session = Depends(g
     
     # Return no content
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# ============================================================================
+# Video File Serving Endpoints
+# ============================================================================
 
 @app.get("/api/videos/{video_id}/file")
 async def get_video_file(
@@ -1028,6 +986,10 @@ async def update_video_metadata(
         logger.error(f"Error updating video: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating video: {str(e)}")
 
+# ============================================================================
+# User Video Endpoints
+# ============================================================================
+
 @app.get("/api/user/{user_id}/videos", response_model=List[Dict[str, Any]])
 async def get_user_videos(
     user_id: str,
@@ -1091,9 +1053,24 @@ async def get_user_videos(
     
     return result
 
+
+# ============================================================================
+# Health Check Endpoint
+# ============================================================================
+
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "routers_loaded": loaded_count
+    }
+
+
+# ============================================================================
+# Application Entry Point
+# ============================================================================
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

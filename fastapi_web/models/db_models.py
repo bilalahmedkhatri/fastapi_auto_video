@@ -355,7 +355,7 @@ class SocialMediaContent(SQLModel, table=True):
 class GeneratedVoiceover(SQLModel, table=True):
     """Table to store generated voiceover files and metadata"""
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
-    user_id: int # User who generated the voiceover
+    user_id: Optional[int] = None  # User who generated the voiceover (None for free tool)
     script_id: Optional[str] = None  # Reference to ScriptGeneration if available
     video_id: Optional[str] = None  # Reference to Video if part of video generation
     
@@ -386,6 +386,17 @@ class GeneratedVoiceover(SQLModel, table=True):
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class FreeVoiceoverUsage(SQLModel, table=True):
+    """Table to track free voiceover tool usage for rate limiting"""
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    identifier: str = Field(index=True)  # IP address or session ID
+    voiceover_id: str  # Reference to GeneratedVoiceover
+    generated_at: datetime = Field(default_factory=datetime.now)
+    expires_at: datetime  # When the file will be deleted
+    is_deleted: bool = Field(default=False)
+
 
 class PlatformDescription(BaseModel):
     """Model for individual platform description"""

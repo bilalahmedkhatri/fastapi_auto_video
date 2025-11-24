@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Voiceover Tool - Audio Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            font-family: inherit;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+        .info {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .info-item {
+            margin: 5px 0;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Free Voiceover Tool - Audio Test</h1>
+        
+        <div class="form-group">
+            <label for="text">Text to Convert:</label>
+            <textarea id="text" placeholder="Enter the text you want to convert to speech (max 10,000 characters)">Hello! This is a test of the free voiceover tool. The audio should be playable directly in your browser.</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="voice">Voice:</label>
+            <select id="voice">
+                <option value="af_sarah">Sarah (American Female)</option>
+                <option value="af_nicole">Nicole (American Female)</option>
+                <option value="am_michael">Michael (American Male)</option>
+                <option value="am_adam">Adam (American Male)</option>
+                <option value="bf_emma">Emma (British Female)</option>
+                <option value="bm_lewis">Lewis (British Male)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="speed">Speed: <span id="speedValue">1.0</span>x</label>
+            <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 100%;">
+        </div>
+
+        <button onclick="generateVoiceover()">Generate Voiceover</button>
+
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Generating voiceover...</p>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // Update speed display
+        document.getElementById('speed').addEventListener('input', function() {
+            document.getElementById('speedValue').textContent = this.value;
+        });
+
+        async function generateVoiceover() {
+            const text = document.getElementById('text').value;
+            const voice = document.getElementById('voice').value;
+            const speed = parseFloat(document.getElementById('speed').value);
+            const resultDiv = document.getElementById('result');
+            const loading = document.querySelector('.loading');
+            const button = document.querySelector('button');
+
+            // Validation
+            if (!text.trim()) {
+                showError('Please enter some text');
+                return;
+            }
+
+            if (text.length > 10000) {
+                showError('Text is too long (max 10,000 characters)');
+                return;
+            }
+
+            // Show loading
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/api/voiceover/free_tool', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        voice_id: voice,
+                        speed: speed
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        const resetDate = new Date(data.detail.retry_after);
+                        showError(`Rate limit exceeded. Please try again after ${resetDate.toLocaleString()}`);
+                    } else {
+                        showError(data.detail || 'Failed to generate voiceover');
+                    }
+                    return;
+                }
+
+                // Success - show audio player
+                showSuccess(data);
+
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        function showSuccess(data) {
+            const resultDiv = document.getElementById('result');
+            const audioUrl = `http://localhost:8000${data.audio_url}`;
+            
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h3>✅ Voiceover Generated Successfully!</h3>
+                <audio controls autoplay>
+                    <source src="${audioUrl}" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+                <div class="info">
+                    <div class="info-item"><strong>Voice:</strong> ${data.voice_name}</div>
+                    <div class="info-item"><strong>Duration:</strong> ${data.duration_seconds.toFixed(2)} seconds</div>
+                    <div class="info-item"><strong>File Size:</strong> ${(data.file_size / 1024).toFixed(2)} KB</div>
+                    <div class="info-item"><strong>Expires At:</strong> ${new Date(data.expires_at).toLocaleString()}</div>
+                    <div class="info-item"><strong>Remaining Uses:</strong> ${data.remaining_uses}/3</div>
+                    <div class="info-item"><strong>Direct URL:</strong> <a href="${audioUrl}" target="_blank">${audioUrl}</a></div>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = `<h3>❌ Error</h3><p>${message}</p>`;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

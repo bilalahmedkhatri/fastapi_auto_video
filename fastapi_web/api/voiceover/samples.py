@@ -8,6 +8,8 @@ from sqlmodel import Session, select
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
 from models.db_models import SelectAIVoices, get_session
 from kokoro_82M.generators import KokoroVoiceGenerator
@@ -15,6 +17,7 @@ from kokoro_82M.config import KOKORO_CONFIG
 
 router = APIRouter()
 
+base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
 # Initialize generator for sample creation
 kokoro_generator = KokoroVoiceGenerator(
     output_base_dir="media/voice_samples"
@@ -77,7 +80,7 @@ async def get_voiceover_samples(
                 accent=v.accent,
                 language=v.language,
                 description=v.voice_description,
-                sample_url=v.voice_sample_url,
+                sample_url=f"{base_url}{v.voice_sample_url}",
                 provider=v.provider or "kokoro-local",
                 model_name=v.model_name or KOKORO_CONFIG["model_name"],
                 is_active=v.is_active

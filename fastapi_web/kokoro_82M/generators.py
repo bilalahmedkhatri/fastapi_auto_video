@@ -10,6 +10,7 @@ Date: 2025-11-12
 
 import json
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
@@ -73,13 +74,24 @@ class KokoroVoiceGenerator:
         return logger
     
     def _initialize_model(self) -> None:
-        """Initialize Kokoro pipeline."""
+        """Initialize Kokoro pipeline with offline mode support."""
         try:
-            self.model = KPipeline(
-                lang_code=KOKORO_CONFIG["lang_code"],
-                device=self.device
-            )
-            self.logger.info(f"Kokoro model initialized: {KOKORO_CONFIG['model_name']}")
+            # Try with local_files_only first (offline mode)
+            try:
+                self.model = KPipeline(
+                    lang_code=KOKORO_CONFIG["lang_code"],
+                    device=self.device,
+                    local_files_only=True  # Use cached model, no internet required
+                )
+                self.logger.info(f"Kokoro model initialized (offline mode): {KOKORO_CONFIG['model_name']}")
+            except Exception as offline_error:
+                # Fallback to online mode if offline fails
+                self.logger.warning(f"Offline mode failed, trying online: {offline_error}")
+                self.model = KPipeline(
+                    lang_code=KOKORO_CONFIG["lang_code"],
+                    device=self.device
+                )
+                self.logger.info(f"Kokoro model initialized (online mode): {KOKORO_CONFIG['model_name']}")
         except Exception as e:
             self.logger.error(f"Model initialization failed: {str(e)}")
             raise RuntimeError(f"Failed to initialize Kokoro: {str(e)}")
@@ -101,6 +113,92 @@ class KokoroVoiceGenerator:
         """Generate timestamp-based filename."""
         return datetime.now().strftime(FILE_CONFIG["filename_format"])
     
+    def _split_text_into_chunks(self, text: str, max_chunk_size: int = 400) -> List[str]:
+        """
+        Split long text into smaller chunks while preserving sentence boundaries.
+        
+        Kokoro has an internal limit of ~400-500 characters per generation.
+        This function splits text intelligently to maintain natural speech flow.
+        
+        Args:
+            text: Text to split
+            max_chunk_size: Maximum characters per chunk (default: 400)
+        
+        Returns:
+            List of text chunks
+        """
+        # If text is short enough, return as-is
+        if len(text) <= max_chunk_size:
+            return [text]
+        
+        # Split by sentence boundaries (. ! ? followed by space or end)
+        sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])|(?<=[.!?])$'
+        sentences = re.split(sentence_pattern, text)
+        
+        chunks = []
+        current_chunk = ""
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+            
+            # If adding this sentence exceeds max_chunk_size
+            if len(current_chunk) + len(sentence) + 1 > max_chunk_size:
+                # If current_chunk has content, save it
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                    current_chunk = sentence
+                else:
+                    # Single sentence is too long - split by character limit
+                    # Try to split at comma or semicolon
+                    if len(sentence) > max_chunk_size:
+                        # Split long sentence at punctuation or word boundaries
+                        words = sentence.split()
+                        temp_chunk = ""
+                        for word in words:
+                            if len(temp_chunk) + len(word) + 1 <= max_chunk_size:
+                                temp_chunk += (" " if temp_chunk else "") + word
+                            else:
+                                if temp_chunk:
+                                    chunks.append(temp_chunk.strip())
+                                temp_chunk = word
+                        if temp_chunk:
+                            current_chunk = temp_chunk
+                    else:
+                        current_chunk = sentence
+            else:
+                # Add sentence to current chunk
+                current_chunk += (" " if current_chunk else "") + sentence
+        
+        # Add remaining chunk
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        
+        self.logger.info(f"Split text ({len(text)} chars) into {len(chunks)} chunks")
+        return chunks
+    
+    def _merge_audio_segments(self, audio_segments: List[np.ndarray]) -> np.ndarray:
+        """
+        Merge multiple audio segments into a single continuous audio array.
+        
+        Args:
+            audio_segments: List of audio numpy arrays
+        
+        Returns:
+            Merged audio array
+        """
+        if not audio_segments:
+            raise ValueError("No audio segments to merge")
+        
+        if len(audio_segments) == 1:
+            return audio_segments[0]
+        
+        # Concatenate all segments
+        merged = np.concatenate(audio_segments)
+        self.logger.info(f"Merged {len(audio_segments)} audio segments into {len(merged)} samples")
+        return merged
+    
     def generate_voice(
         self,
         text: str,
@@ -109,19 +207,24 @@ class KokoroVoiceGenerator:
         filename: Optional[str] = None,
         speed: float = None,
         normalize: bool = True,
-        save_metadata: bool = True
+        save_metadata: bool = True,
+        max_chunk_size: int = 400
     ) -> Tuple[str, Dict[str, Any]]:
         """
-        Generate voice from text.
+        Generate voice from text with automatic chunking for long text.
+        
+        Kokoro has an internal limit of ~400-500 characters. This method automatically
+        splits long text into chunks, generates audio for each, and merges them seamlessly.
         
         Args:
-            text: Text to synthesize
+            text: Text to synthesize (any length up to 10,000 characters)
             voice_type: Voice identifier (e.g., "af_sarah", "am_michael")
             output_dir: Custom output directory
             filename: Custom filename (without extension)
             speed: Speech speed (0.5-2.0, default 1.0)
             normalize: Apply audio normalization
             save_metadata: Save JSON metadata file
+            max_chunk_size: Maximum characters per chunk (default: 400)
         
         Returns:
             Tuple of (audio_file_path, metadata_dict)
@@ -143,22 +246,39 @@ class KokoroVoiceGenerator:
             raise ValueError(f"Speed must be between {AUDIO_CONFIG['speed_min']} and {AUDIO_CONFIG['speed_max']}")
         
         try:
-            self.logger.info(f"Generating: text='{text[:50]}...', voice={voice_type}")
+            self.logger.info(f"Generating: text='{text[:50]}...' ({len(text)} chars), voice={voice_type}")
             
-            # Generate audio using KPipeline
-            result = next(self.model(text=text, voice=voice_type.lower(), speed=speed))
-            audio_tensor = result.audio
+            # Split text into chunks if needed
+            text_chunks = self._split_text_into_chunks(text, max_chunk_size)
+            audio_segments = []
             
-            # Convert to numpy
-            audio = audio_tensor.cpu().numpy() if isinstance(audio_tensor, torch.Tensor) else np.array(audio_tensor)
+            # Generate audio for each chunk
+            for i, chunk in enumerate(text_chunks):
+                self.logger.info(f"Processing chunk {i+1}/{len(text_chunks)} ({len(chunk)} chars)")
+                
+                # Generate audio using KPipeline
+                result = next(self.model(text=chunk, voice=voice_type.lower(), speed=speed))
+                audio_tensor = result.audio
+                
+                # Convert to numpy
+                audio = audio_tensor.cpu().numpy() if isinstance(audio_tensor, torch.Tensor) else np.array(audio_tensor)
+                
+                # Ensure mono
+                if audio.ndim > 1:
+                    audio = np.mean(audio, axis=0)
+                
+                # Normalize
+                if normalize:
+                    audio = self._normalize_audio(audio)
+                
+                audio_segments.append(audio)
             
-            # Ensure mono
-            if audio.ndim > 1:
-                audio = np.mean(audio, axis=0)
-            
-            # Normalize
-            if normalize:
-                audio = self._normalize_audio(audio)
+            # Merge all audio segments
+            if len(audio_segments) > 1:
+                final_audio = self._merge_audio_segments(audio_segments)
+                self.logger.info(f"Merged {len(audio_segments)} chunks into final audio")
+            else:
+                final_audio = audio_segments[0]
             
             # Prepare output
             output_path = Path(output_dir) if output_dir else self.output_base_dir
@@ -168,7 +288,7 @@ class KokoroVoiceGenerator:
             audio_file = output_path / f"{filename}{FILE_CONFIG['audio_extension']}"
             
             # Save audio
-            audio_int16 = np.clip(audio * 32767, -32768, 32767).astype(np.int16)
+            audio_int16 = np.clip(final_audio * 32767, -32768, 32767).astype(np.int16)
             wavfile.write(str(audio_file), KOKORO_CONFIG["sample_rate"], audio_int16)
             
             # Create metadata
@@ -177,11 +297,13 @@ class KokoroVoiceGenerator:
                 "voice_type": voice_type,
                 "audio_file": str(audio_file),
                 "sample_rate": KOKORO_CONFIG["sample_rate"],
-                "duration_seconds": float(audio.shape[0] / KOKORO_CONFIG["sample_rate"]),
+                "duration_seconds": float(final_audio.shape[0] / KOKORO_CONFIG["sample_rate"]),
                 "speed": speed,
                 "normalized": normalize,
                 "generated_at": datetime.now().isoformat(),
-                "file_size_bytes": audio_file.stat().st_size
+                "file_size_bytes": audio_file.stat().st_size,
+                "text_chunks": len(text_chunks),
+                "text_length": len(text)
             }
             
             # Save metadata

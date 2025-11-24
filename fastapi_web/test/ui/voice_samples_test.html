@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Sample Player Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .voice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .voice-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .voice-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .voice-card.playing {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .voice-card.error {
+            border-color: #dc3545;
+            background: #fff0f0;
+        }
+        
+        .voice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .voice-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .voice-id {
+            font-size: 0.9em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 5px;
+        }
+        
+        .play-button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .play-button:hover {
+            background: #5568d3;
+            transform: scale(1.02);
+        }
+        
+        .play-button:active {
+            transform: scale(0.98);
+        }
+        
+        .play-button.playing {
+            background: #28a745;
+        }
+        
+        .play-button.error {
+            background: #dc3545;
+        }
+        
+        .status {
+            font-size: 0.85em;
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .status.success {
+            color: #28a745;
+            background: #d4edda;
+        }
+        
+        .status.error {
+            color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .status.playing {
+            color: #007bff;
+            background: #d1ecf1;
+        }
+        
+        audio {
+            width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Voice Sample Player</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalVoices">0</div>
+                <div class="stat-label">Total Voices</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="playableVoices">0</div>
+                <div class="stat-label">Playable</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="errorVoices">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+        </div>
+        
+        <div id="voiceGrid" class="voice-grid">
+            <div class="loading">Loading voices...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentAudio = null;
+        let stats = { total: 0, playable: 0, errors: 0 };
+
+        // Voice samples we know exist
+        const voiceSamples = [
+            { id: 'af_sarah', name: 'Af Sarah' },
+            { id: 'af_nicole', name: 'Af Nicole' },
+            { id: 'af_sky', name: 'Af Sky' },
+            { id: 'am_adam', name: 'Am Adam' },
+            { id: 'am_michael', name: 'Am Michael' },
+            { id: 'bf_emma', name: 'Bf Emma' },
+            { id: 'bf_isabella', name: 'Bf Isabella' },
+            { id: 'bm_george', name: 'Bm George' },
+            { id: 'bm_lewis', name: 'Bm Lewis' },
+            { id: 'af_bella', name: 'Af Bella' },
+            { id: 'af_kore', name: 'Af Kore' },
+            { id: 'bf_lily', name: 'Bf Lily' },
+            { id: 'am_eric', name: 'Am Eric' },
+            { id: 'zf_xiaobei', name: 'Zf Xiaobei' },
+            { id: 'af_river', name: 'Af River' }
+        ];
+
+        function updateStats() {
+            document.getElementById('totalVoices').textContent = stats.total;
+            document.getElementById('playableVoices').textContent = stats.playable;
+            document.getElementById('errorVoices').textContent = stats.errors;
+        }
+
+        function createVoiceCard(voice) {
+            const card = document.createElement('div');
+            card.className = 'voice-card';
+            card.id = `card-${voice.id}`;
+            
+            const url = `${API_BASE}/api/voice-samples/${voice.id}_sample.wav`;
+            
+            card.innerHTML = `
+                <div class="voice-header">
+                    <div class="voice-name">${voice.name}</div>
+                    <div class="voice-id">${voice.id}</div>
+                </div>
+                <button class="play-button" onclick="playVoice('${voice.id}', '${url}')">
+                    ▶️ Play Sample
+                </button>
+                <div class="status" id="status-${voice.id}">Ready</div>
+                <audio id="audio-${voice.id}" src="${url}" 
+                    onloadeddata="onAudioLoaded('${voice.id}')"
+                    onerror="onAudioError('${voice.id}')"
+                    onplay="onAudioPlay('${voice.id}')"
+                    onended="onAudioEnded('${voice.id}')">
+                </audio>
+            `;
+            
+            return card;
+        }
+
+        function playVoice(voiceId, url) {
+            // Stop current audio if playing
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            
+            const audio = document.getElementById(`audio-${voiceId}`);
+            const button = document.querySelector(`#card-${voiceId} .play-button`);
+            
+            if (audio.paused) {
+                audio.play();
+                currentAudio = audio;
+                button.textContent = '⏸️ Pause';
+                button.classList.add('playing');
+            } else {
+                audio.pause();
+                button.textContent = '▶️ Play Sample';
+                button.classList.remove('playing');
+            }
+        }
+
+        function onAudioLoaded(voiceId) {
+            const status = document.getElementById(`status-${voiceId}`);
+            const card = document.getElementById(`card-${voiceId}`);
+            const audio = document.getElementById(`audio-${voiceId}`);
+            
+            const duration = audio.duration.toFixed(1);
+            status.textContent = `Ready - ${duration}s`;
+            status.className = 'status success';
+            
+            stats.playable++;
+            updateStats();
+        }
+
+        function onAudioError(voiceId) {
+            const status = document.getElementById(`status-${voiceId}`);
+            const card = document.getElementById(`card-${voiceId}`);
+            const button = document.querySelector(`#card-${voiceId} .play-button`);
+            
+            status.textContent = '❌ File not accessible';
+            status.className = 'status error';
+            card.classList.add('error');
+            button.classList.add('error');
+            button.disabled = true;
+            
+            stats.errors++;
+            updateStats();
+        }
+
+        function onAudioPlay(voiceId) {
+            const status = document.getElementById(`status-${voiceId}`);
+            const card = document.getElementById(`card-${voiceId}`);
+            
+            status.textContent = '🎵 Playing...';
+            status.className = 'status playing';
+            card.classList.add('playing');
+            
+            // Reset other cards
+            document.querySelectorAll('.voice-card').forEach(c => {
+                if (c.id !== `card-${voiceId}`) {
+                    c.classList.remove('playing');
+                }
+            });
+        }
+
+        function onAudioEnded(voiceId) {
+            const status = document.getElementById(`status-${voiceId}`);
+            const card = document.getElementById(`card-${voiceId}`);
+            const button = document.querySelector(`#card-${voiceId} .play-button`);
+            const audio = document.getElementById(`audio-${voiceId}`);
+            
+            const duration = audio.duration.toFixed(1);
+            status.textContent = `Ready - ${duration}s`;
+            status.className = 'status success';
+            card.classList.remove('playing');
+            button.textContent = '▶️ Play Sample';
+            button.classList.remove('playing');
+        }
+
+        // Initialize
+        function init() {
+            const grid = document.getElementById('voiceGrid');
+            grid.innerHTML = '';
+            
+            stats.total = voiceSamples.length;
+            updateStats();
+            
+            voiceSamples.forEach(voice => {
+                grid.appendChild(createVoiceCard(voice));
+            });
+        }
+
+        // Run on load
+        init();
+    </script>
+</body>
+</html>
