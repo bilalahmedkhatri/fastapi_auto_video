@@ -2,27 +2,27 @@
 # Install these in cPanel Python app virtual environment
 
 # Core Framework
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+fastapi
+uvicorn[standard]
 
 # Database
-sqlmodel==0.0.14
-psycopg2-binary==2.9.9
-alembic==1.12.1
+sqlmodel
+psycopg2-binary
+alembic
 
 # Voice Generation
-kokoro-onnx==0.1.0
-torch==2.1.0
-scipy==1.11.4
-numpy==1.26.2
+kokoro-onnx
+torch
+scipy
+numpy
 
 # Utilities
-python-dotenv==1.0.0
-python-multipart==0.0.6
-pydantic==2.5.0
+python-dotenv
+python-multipart
+pydantic
 
 # Optional (if using Celery - NOT recommended for cPanel)
-# celery==5.3.4
+# celery
 # redis==5.0.1
 
 # Optional (if using video features)
