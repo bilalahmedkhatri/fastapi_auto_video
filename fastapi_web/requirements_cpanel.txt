@@ -7,7 +7,9 @@ uvicorn[standard]
 
 # Database
 sqlmodel
-psycopg2-binary
+psycopg2-binary  # For PostgreSQL (local)
+pymysql  # For MySQL (cPanel fallback)
+cryptography  # Required by pymysql for secure connections
 alembic
 
 # Voice Generation

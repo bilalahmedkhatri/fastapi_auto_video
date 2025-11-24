@@ -65,26 +65,33 @@ class DatabaseConnectionManager:
         """Get local PostgreSQL connection URL from environment"""
         return os.getenv('POSTGRESQL_DATABASE_URL')
     
-    def _get_cpanel_postgresql_url(self) -> Optional[str]:
+    def _get_cpanel_database_url(self) -> Optional[str]:
         """
-        Get cPanel PostgreSQL connection URL from environment
+        Get cPanel database connection URL from environment
+        Supports both PostgreSQL and MySQL
         
-        Format: postgresql://username:password@host:port/database
+        Format: 
+        - PostgreSQL: postgresql://username:password@host:port/database
+        - MySQL: mysql+pymysql://username:password@host:port/database
         """
         # Try to get from environment variable first
-        cpanel_url = os.getenv('CPANEL_POSTGRESQL_DATABASE_URL')
+        cpanel_url = os.getenv('CPANEL_POSTGRESQL_DATABASE_URL') or os.getenv('CPANEL_MYSQL_DATABASE_URL')
         if cpanel_url:
             return cpanel_url
         
         # Build from individual components if available
         host = os.getenv('CPANEL_DB_HOST', 'localhost')
-        port = os.getenv('CPANEL_DB_PORT', '5432')
+        port = os.getenv('CPANEL_DB_PORT', '3306')
         database = os.getenv('CPANEL_DB_NAME', 'uihxzefkgh_azeemlab_api')
         username = os.getenv('CPANEL_DB_USER', 'uihxzefkgh_azeemlab_api')
         password = os.getenv('CPANEL_DB_PASSWORD', '5P2bnCA43r3w')
+        db_type = os.getenv('CPANEL_DB_TYPE', 'mysql')  # Default to MySQL for cPanel
         
         if all([host, port, database, username, password]):
-            return f"postgresql://{username}:{password}@{host}:{port}/{database}"
+            if db_type.lower() == 'mysql':
+                return f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}"
+            else:
+                return f"postgresql://{username}:{password}@{host}:{port}/{database}"
         
         return None
     
@@ -114,18 +121,19 @@ class DatabaseConnectionManager:
                 else:
                     logger.warning("⚠️  Local PostgreSQL database not available, trying fallback...")
         
-        # Fallback to cPanel PostgreSQL
-        cpanel_url = self._get_cpanel_postgresql_url()
+        # Fallback to cPanel database (PostgreSQL or MySQL)
+        cpanel_url = self._get_cpanel_database_url()
         if cpanel_url:
-            logger.info("🔍 Attempting to connect to cPanel PostgreSQL database...")
+            db_type = "MySQL" if "mysql" in cpanel_url else "PostgreSQL"
+            logger.info(f"🔍 Attempting to connect to cPanel {db_type} database...")
             if self._test_connection(cpanel_url):
-                logger.info("✅ Connected to CPANEL PostgreSQL database")
+                logger.info(f"✅ Connected to CPANEL {db_type} database")
                 self.engine = create_engine(cpanel_url, echo=False)
                 self.connection_type = 'cpanel'
                 self.connection_url = cpanel_url
                 return self.engine, 'cpanel'
             else:
-                logger.error("❌ cPanel PostgreSQL database connection failed")
+                logger.error(f"❌ cPanel {db_type} database connection failed")
         
         # No database connection available
         logger.error("❌ No database connection available!")

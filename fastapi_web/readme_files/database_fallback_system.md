@@ -5,7 +5,7 @@
 The FastAPI application now includes an intelligent database connection system with automatic fallback. It will:
 
 1. **Try to connect to LOCAL PostgreSQL database first**
-2. **Automatically fall back to cPanel PostgreSQL database** if local is unavailable
+2. **Automatically fall back to cPanel MySQL database** if local is unavailable
 
 This ensures the application can run both in development (local) and production (cPanel) environments seamlessly.
 
@@ -16,7 +16,7 @@ This ensures the application can run both in development (local) and production 
 ```
 1. Local PostgreSQL (localhost:5432/auto_video_db)
    ↓ (if connection fails)
-2. cPanel PostgreSQL (localhost:5432/uihxzefkgh_azeemlab_api)
+2. cPanel MySQL (localhost:3306/uihxzefkgh_azeemlab_api)
    ↓ (if both fail)
 3. Throw ConnectionError
 ```
@@ -27,6 +27,7 @@ The `DatabaseConnectionManager` class in `models/database_connection.py` handles
 
 - **Connection testing** - Verifies database availability before using
 - **Automatic fallback** - Switches to backup database if primary fails
+- **Multi-database support** - Works with PostgreSQL (local) and MySQL (cPanel)
 - **Health monitoring** - Provides health check endpoint
 - **Secure logging** - Masks passwords in logs
 
@@ -40,26 +41,28 @@ Update your `.env` file with both database configurations:
 # Local PostgreSQL (Primary)
 POSTGRESQL_DATABASE_URL=postgresql://admin:admin_password@localhost:5432/auto_video_db
 
-# cPanel PostgreSQL (Fallback)
-CPANEL_POSTGRESQL_DATABASE_URL=postgresql://uihxzefkgh_azeemlab_api:5P2bnCA43r3w@localhost:5432/uihxzefkgh_azeemlab_api
+# cPanel MySQL (Fallback)
+CPANEL_MYSQL_DATABASE_URL=mysql+pymysql://uihxzefkgh_azeemlab_api:5P2bnCA43r3w@localhost:3306/uihxzefkgh_azeemlab_api
 
 # Alternative: Individual components (optional)
 CPANEL_DB_HOST=localhost
-CPANEL_DB_PORT=5432
+CPANEL_DB_PORT=3306
 CPANEL_DB_NAME=uihxzefkgh_azeemlab_api
 CPANEL_DB_USER=uihxzefkgh_azeemlab_api
 CPANEL_DB_PASSWORD=5P2bnCA43r3w
+CPANEL_DB_TYPE=mysql
 ```
 
 ### cPanel Database Setup
 
-Based on your cPanel setup:
+Based on your cPanel setup (MySQL):
 
 - **Database Name**: `uihxzefkgh_azeemlab_api`
 - **Username**: `uihxzefkgh_azeemlab_api`
 - **Password**: `5P2bnCA43r3w`
 - **Host**: `localhost` (on cPanel server)
-- **Port**: `5432` (PostgreSQL default)
+- **Port**: `3306` (MySQL default)
+- **Type**: MySQL
 
 ## Usage
 
@@ -85,9 +88,9 @@ Or if local fails:
 
 ```bash
 # ⚠️  Local PostgreSQL database not available, trying fallback...
-# 🔍 Attempting to connect to cPanel PostgreSQL database...
-# ✅ Connected to CPANEL PostgreSQL database
-# 🗄️  Database: CPANEL - postgresql://uihxzefkgh_****@localhost:5432/uihxzefkgh_azeemlab_api
+# 🔍 Attempting to connect to cPanel MySQL database...
+# ✅ Connected to CPANEL MySQL database
+# 🗄️  Database: CPANEL - mysql+pymysql://uihxzefkgh_****@localhost:3306/uihxzefkgh_azeemlab_api
 ```
 
 ### Health Check Endpoint
@@ -130,29 +133,49 @@ engine, conn_type = db_manager.connect(force_cpanel=True)
 
 ## Database Migration
 
-Both databases should have the same schema. To sync:
+Both databases should have the same schema. SQLModel will auto-create tables on both PostgreSQL and MySQL.
 
-### 1. Export Local Schema
+### Important Note on MySQL vs PostgreSQL
 
-```bash
-# On your development machine
-pg_dump -h localhost -U admin -d auto_video_db --schema-only > schema.sql
-```
+While both databases are supported, be aware:
 
-### 2. Import to cPanel
+- **PostgreSQL**: Full feature support, recommended for local development
+- **MySQL**: Compatible with cPanel shared hosting, some minor differences in SQL syntax
 
-```bash
-# On cPanel server (or via phpPgAdmin)
-psql -h localhost -U uihxzefkgh_azeemlab_api -d uihxzefkgh_azeemlab_api < schema.sql
-```
-
-### 3. Or Let Application Auto-Create
+### Auto-Create Tables
 
 The application will automatically create tables on startup:
 
 ```python
 # In main.py startup event
 create_db_and_tables()  # Creates tables if they don't exist
+```
+
+This works for both PostgreSQL and MySQL databases.
+
+### Manual Migration (Optional)
+
+If you need to manually sync schemas:
+
+#### 1. Export Local Schema (PostgreSQL)
+
+```bash
+# On your development machine
+pg_dump -h localhost -U admin -d auto_video_db --schema-only > schema.sql
+```
+
+#### 2. Convert to MySQL (if needed)
+
+Use a tool like `pg2mysql` or manually adjust:
+- Change `SERIAL` to `AUTO_INCREMENT`
+- Adjust data types (e.g., `TEXT` to `LONGTEXT`)
+- Update `::` type casts to `CAST(... AS ...)`
+
+#### 3. Import to MySQL
+
+```bash
+# On cPanel server (or via phpMyAdmin)
+mysql -h localhost -u uihxzefkgh_azeemlab_api -p uihxzefkgh_azeemlab_api < schema_mysql.sql
 ```
 
 ## Troubleshooting
@@ -179,9 +202,10 @@ tail -f logs/auto_video.log
 Common issues:
 
 1. **Wrong credentials** - Verify username/password in `.env`
-2. **Database doesn't exist** - Create database in cPanel
-3. **Firewall blocking** - Check PostgreSQL port (5432) is open
-4. **PostgreSQL not running** - Start PostgreSQL service
+2. **Database doesn't exist** - Create database in cPanel (MySQL Database wizard)
+3. **Firewall blocking** - Check MySQL port (3306) is open
+4. **MySQL not running** - Start MySQL service (usually auto-starts in cPanel)
+5. **Missing PyMySQL** - Install: `pip install pymysql cryptography`
 
 ### Force Reconnection
 
@@ -203,8 +227,8 @@ uvicorn main:app --host localhost --port 8000 --reload
 
 ### Production (cPanel)
 
-- Falls back to `CPANEL_POSTGRESQL_DATABASE_URL`
-- Shared hosting environment
+- Falls back to `CPANEL_MYSQL_DATABASE_URL`
+- Shared hosting environment with MySQL
 - Managed by cPanel
 
 ### Hybrid Setup
@@ -249,17 +273,41 @@ tail -f logs/auto_video.log | grep -i database
 Look for:
 
 - `✅ Connected to LOCAL PostgreSQL database`
-- `✅ Connected to CPANEL PostgreSQL database`
+- `✅ Connected to CPANEL MySQL database`
 - `❌ No database connection available!`
 
 ## Benefits
 
 ✅ **Seamless deployment** - Works in any environment  
 ✅ **Automatic failover** - No manual intervention needed  
+✅ **Multi-database support** - PostgreSQL + MySQL compatibility  
 ✅ **Health monitoring** - Check status via API  
 ✅ **Secure logging** - Passwords masked in logs  
 ✅ **Fast testing** - 3-second timeout per database  
 ✅ **Backward compatible** - Existing code works unchanged  
+
+## Database Compatibility Notes
+
+### PostgreSQL (Local Development)
+- Full JSON field support
+- Advanced indexing features
+- Better for complex queries
+- Recommended for development
+
+### MySQL (cPanel Production)
+- Widely available on shared hosting
+- Good performance for most use cases
+- Compatible with SQLModel
+- Standard cPanel database option
+
+### Differences to Be Aware Of
+
+1. **JSON Fields**: Both support JSON, but syntax differs
+2. **Auto-increment**: PostgreSQL uses `SERIAL`, MySQL uses `AUTO_INCREMENT` (SQLModel handles this)
+3. **Text Fields**: PostgreSQL has unlimited `TEXT`, MySQL has size limits (SQLModel uses appropriate types)
+4. **Case Sensitivity**: MySQL is case-insensitive by default, PostgreSQL is case-sensitive
+
+SQLModel abstracts most of these differences, so your code works on both databases without changes!  
 
 ---
 
