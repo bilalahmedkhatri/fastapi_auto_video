@@ -19,19 +19,54 @@ def test_mysql_connection():
     print("🔍 Testing MySQL Connection")
     print("=" * 70)
     
-    # Get credentials from environment
-    host = os.getenv('CPANEL_DB_HOST', 'localhost')
-    port = os.getenv('CPANEL_DB_PORT', '3306')
-    database = os.getenv('CPANEL_DB_NAME', 'uihxzefkgh_azeemlab_api')
-    username = os.getenv('CPANEL_DB_USER', 'uihxzefkgh_azeemlab_api')
-    password = os.getenv('CPANEL_DB_PASSWORD', '5P2bnCA43r3w')
-    
-    print(f"\n📋 Connection Details:")
-    print(f"   Host:     {host}")
-    print(f"   Port:     {port}")
-    print(f"   Database: {database}")
-    print(f"   Username: {username}")
-    print(f"   Password: {'*' * len(password) if password else 'NOT SET'}")
+    # First try to get connection URL directly from .env
+    cpanel_url = os.getenv('CPANEL_MYSQL_DATABASE_URL')
+    if cpanel_url:
+        print(f"\n📋 Using CPANEL_MYSQL_DATABASE_URL from .env")
+        print(f"   URL: {cpanel_url[:30]}...{cpanel_url[-15:]}")
+        
+        # Parse URL to show details
+        import re
+        match = re.search(r'mysql\+pymysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', cpanel_url)
+        if match:
+            username, password, host, port, database = match.groups()
+            print(f"\n📋 Parsed Connection Details:")
+            print(f"   Host:     {host}")
+            print(f"   Port:     {port}")
+            print(f"   Database: {database}")
+            print(f"   Username: {username}")
+            print(f"   Password: {'*' * len(password)}")
+        else:
+            # Fallback to individual components
+            host = os.getenv('CPANEL_DB_HOST', 'localhost')
+            port = os.getenv('CPANEL_DB_PORT', '3306')
+            database = os.getenv('CPANEL_DB_NAME', 'uihxzefkgh_azeemlab_api')
+            username = os.getenv('CPANEL_DB_USER', 'uihxzefkgh_azeemlab_api')
+            password = os.getenv('CPANEL_DB_PASSWORD', '5P2bnCA43r3w')
+            
+            print(f"\n📋 Connection Details (from components):")
+            print(f"   Host:     {host}")
+            print(f"   Port:     {port}")
+            print(f"   Database: {database}")
+            print(f"   Username: {username}")
+            print(f"   Password: {'*' * len(password) if password else 'NOT SET'}")
+    else:
+        print(f"\n⚠️  CPANEL_MYSQL_DATABASE_URL not found in .env")
+        print(f"   Falling back to individual components...")
+        
+        # Get credentials from environment
+        host = os.getenv('CPANEL_DB_HOST', 'localhost')
+        port = os.getenv('CPANEL_DB_PORT', '3306')
+        database = os.getenv('CPANEL_DB_NAME', 'uihxzefkgh_azeemlab_api')
+        username = os.getenv('CPANEL_DB_USER', 'uihxzefkgh_azeemlab_api')
+        password = os.getenv('CPANEL_DB_PASSWORD', '5P2bnCA43r3w')
+        
+        print(f"\n📋 Connection Details:")
+        print(f"   Host:     {host}")
+        print(f"   Port:     {port}")
+        print(f"   Database: {database}")
+        print(f"   Username: {username}")
+        print(f"   Password: {'*' * len(password) if password else 'NOT SET'}")
     
     # Test 1: Check if pymysql is installed
     print(f"\n1️⃣  Checking PyMySQL installation...")
@@ -46,6 +81,10 @@ def test_mysql_connection():
     # Test 2: Test direct PyMySQL connection
     print(f"\n2️⃣  Testing direct PyMySQL connection...")
     try:
+        # Use parsed values from URL if available, otherwise use components
+        if cpanel_url and match:
+            username, password, host, port, database = match.groups()
+        
         connection = pymysql.connect(
             host=host,
             port=int(port),
@@ -79,7 +118,12 @@ def test_mysql_connection():
     try:
         from sqlalchemy import create_engine, text
         
-        url = f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}"
+        # Use URL from .env if available
+        if cpanel_url:
+            url = cpanel_url
+        else:
+            url = f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}"
+        
         engine = create_engine(url, echo=False)
         
         with engine.connect() as conn:
