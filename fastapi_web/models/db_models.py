@@ -10,11 +10,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Database connection setup
-db_url = os.getenv('POSTGRESQL_DATABASE_URL')
+# Database connection setup with fallback logic
+from .database_connection import db_manager, get_engine, get_connection_info, health_check
 
-# Create engine for PostgreSQL
-engine = create_engine(db_url, echo=False)
+# Get engine from connection manager (with automatic fallback)
+engine = db_manager.get_engine()
 
 # Model for video requests coming from API
 class VideoCreationRequest(BaseModel):

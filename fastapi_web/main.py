@@ -87,6 +87,12 @@ async def websocket_video_process(websocket: WebSocket, user_id: str = "demo_use
 async def on_startup():
     """Initialize application on startup"""
     create_db_and_tables()
+    
+    # Log database connection information
+    from models.database_connection import get_connection_info
+    db_info = get_connection_info()
+    logger.info(f"🗄️  Database: {db_info['connection_type'].upper()} - {db_info['connection_url_masked']}")
+    
     logger.info(f"Application started - {loaded_count} routers loaded")
     
     # Run voice sample check in background
@@ -160,6 +166,30 @@ async def generate_video(video_id: str, session: Session):
 # ============================================================================
 # Video Status & Processing Endpoints
 # ============================================================================
+
+@app.get("/api/health")
+async def health_check_endpoint():
+    """
+    Health check endpoint to verify application and database status
+    """
+    from models.database_connection import health_check, get_connection_info
+    
+    db_health = health_check()
+    db_info = get_connection_info()
+    
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "database": {
+            "status": db_health["status"],
+            "connection_type": db_info["connection_type"],
+            "message": db_health.get("message", "")
+        },
+        "application": {
+            "name": "Auto Video Generation API",
+            "version": "1.0.0"
+        }
+    }
 
 @app.get("/api/videos/status/{video_id}", response_model=Dict[str, Any])
 async def get_video_status(video_id: str, user_id: Optional[str] = None, session: Session = Depends(get_session)):
