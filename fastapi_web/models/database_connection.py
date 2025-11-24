@@ -85,7 +85,7 @@ class DatabaseConnectionManager:
         port = os.getenv('CPANEL_DB_PORT', '3306')
         database = os.getenv('CPANEL_DB_NAME', 'uihxzefkgh_azeemlab_api')
         username = os.getenv('CPANEL_DB_USER', 'uihxzefkgh_azeemlab_api')
-        password = os.getenv('CPANEL_DB_PASSWORD', '5P2bnCA43r3w')
+        password = os.getenv('CPANEL_DB_PASSWORD', '3FUbns*4sQ(2')
         db_type = os.getenv('CPANEL_DB_TYPE', 'mysql')  # Default to MySQL for cPanel
         
         if all([host, port, database, username, password]):
