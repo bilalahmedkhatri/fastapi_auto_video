@@ -18,6 +18,10 @@ media/
 *.mp4
 *.wav
 *.avi
+media.zip
+
+# Test files
+test_chunking.py
 
 # User specific directories
 user_hashes/
