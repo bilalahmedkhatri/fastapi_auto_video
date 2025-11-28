@@ -58,7 +58,9 @@ class KokoroVoiceGenerator:
         self.output_base_dir.mkdir(parents=True, exist_ok=True)
         
         self.logger = logger or self._setup_logger()
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        # Force CPU only (GPU disabled)
+        # self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
         
         self.logger.info(f"Using device: {self.device}")
         self._initialize_model()
@@ -131,8 +133,15 @@ class KokoroVoiceGenerator:
         if len(text) <= max_chunk_size:
             return [text]
         
-        # Split by sentence boundaries (. ! ? followed by space or end)
-        sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])|(?<=[.!?])$'
+        # First normalize whitespace - replace multiple newlines/spaces
+        text = re.sub(r'\n\s*\n+', '\n\n', text)  # Keep paragraph breaks
+        text = re.sub(r'[ \t]+', ' ', text)  # Normalize spaces
+        
+        # Split by:
+        # 1. Sentence endings (. ! ?) followed by space/newline and capital letter
+        # 2. Double newlines (paragraph breaks)
+        # 3. Single newline followed by capital letter (bullet points)
+        sentence_pattern = r'(?<=[.!?])(?:\s+)(?=[A-Z])|(?:\n\n)|(?:\n)(?=[A-Z])'
         sentences = re.split(sentence_pattern, text)
         
         chunks = []
@@ -168,7 +177,7 @@ class KokoroVoiceGenerator:
                     else:
                         current_chunk = sentence
             else:
-                # Add sentence to current chunk
+                # Add sentence to current chunk with a space separator
                 current_chunk += (" " if current_chunk else "") + sentence
         
         # Add remaining chunk
@@ -176,6 +185,9 @@ class KokoroVoiceGenerator:
             chunks.append(current_chunk.strip())
         
         self.logger.info(f"Split text ({len(text)} chars) into {len(chunks)} chunks")
+        for i, chunk in enumerate(chunks):
+            self.logger.debug(f"Chunk {i+1}: {chunk[:100]}...")
+        
         return chunks
     
     def _merge_audio_segments(self, audio_segments: List[np.ndarray]) -> np.ndarray:

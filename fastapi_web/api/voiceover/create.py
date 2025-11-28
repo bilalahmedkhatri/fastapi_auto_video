@@ -10,14 +10,9 @@ import time
 from pathlib import Path
 
 from models.db_models import GeneratedVoiceover, SelectAIVoices, get_session
-from kokoro_82M.generators import KokoroVoiceGenerator
+from kokoro_82M.model_cache import get_cached_generator
 
 router = APIRouter()
-
-# Initialize Kokoro generator
-kokoro_generator = KokoroVoiceGenerator(
-    output_base_dir="media/audio"
-)
 
 
 class CreateVoiceoverRequest(BaseModel):
@@ -77,10 +72,12 @@ async def create_voiceover(
         if len(request.text) > 10000:
             raise HTTPException(status_code=400, detail="Text too long (max 10,000 characters)")
         
-        # Generate voiceover using local Kokoro
-        audio_path, metadata = kokoro_generator.generate_voice(
+        # Generate voiceover using cached Kokoro model (faster after first request)
+        generator = get_cached_generator()
+        audio_path, metadata = generator.generate_voice(
             text=request.text,
             voice_type=request.voice_id,
+            output_dir="media/audio",
             speed=request.speed,
             normalize=True,
             save_metadata=True

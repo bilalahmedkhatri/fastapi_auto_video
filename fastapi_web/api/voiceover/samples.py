@@ -12,16 +12,12 @@ from dotenv import load_dotenv
 import os
 
 from models.db_models import SelectAIVoices, get_session
-from kokoro_82M.generators import KokoroVoiceGenerator
+from kokoro_82M.model_cache import get_cached_generator
 from kokoro_82M.config import KOKORO_CONFIG
 
 router = APIRouter()
 
 base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
-# Initialize generator for sample creation
-kokoro_generator = KokoroVoiceGenerator(
-    output_base_dir="media/voice_samples"
-)
 
 
 class VoiceSample(BaseModel):
@@ -120,9 +116,11 @@ async def get_voice_sample_audio(
         sample_text = "Hello, this is a sample of my voice. I can help you create engaging voiceovers for your videos."
         
         try:
-            audio_path, _ = kokoro_generator.generate_voice(
+            generator = get_cached_generator()
+            audio_path, _ = generator.generate_voice(
                 text=sample_text,
                 voice_type=voice_id,
+                output_dir="media/voice_samples",
                 filename=f"{voice_id}_sample",
                 speed=1.0,
                 normalize=True,
@@ -167,9 +165,11 @@ async def generate_voice_sample(
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     
     try:
-        audio_path, metadata = kokoro_generator.generate_voice(
+        generator = get_cached_generator()
+        audio_path, metadata = generator.generate_voice(
             text=text,
             voice_type=voice_id,
+            output_dir="media/voice_samples",
             filename=f"{voice_id}_sample",
             speed=1.0,
             normalize=True,
