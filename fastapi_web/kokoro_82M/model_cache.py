@@ -47,13 +47,13 @@ def get_cached_generator() -> KokoroVoiceGenerator:
     with _generator_lock:
         # Double-check pattern: another thread might have initialized while we waited
         if _cached_generator is None:
-            logger.info("🔄 Initializing Kokoro model (one-time load, ~8 seconds)...")
+            logger.info("[LOADING] Initializing Kokoro model (one-time load, ~8 seconds)...")
             try:
                 _cached_generator = KokoroVoiceGenerator()
-                logger.info("✅ Kokoro model loaded and cached successfully")
-                logger.info(f"📊 Model memory footprint: ~500MB-1GB")
+                logger.info("[OK] Kokoro model loaded and cached successfully")
+                logger.info(f"[STATS] Model memory footprint: ~500MB-1GB")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize Kokoro model: {e}")
+                logger.error(f"[ERROR] Failed to initialize Kokoro model: {e}")
                 raise RuntimeError(f"Model initialization failed: {e}") from e
         else:
             logger.debug("Model was initialized by another thread, using cached instance")

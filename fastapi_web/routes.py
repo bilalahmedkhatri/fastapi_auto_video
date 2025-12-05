@@ -86,15 +86,15 @@ def load_routers(app) -> int:
             else:
                 app.include_router(router)
             
-            logger.info(f"✓ Loaded router: {module_path}.{router_name}")
+            logger.info(f"[OK] Loaded router: {module_path}.{router_name}")
             loaded_count += 1
             
         except ImportError as e:
-            logger.warning(f"✗ Failed to import router {module_path}.{router_name}: {str(e)}")
+            logger.warning(f"[FAIL] Failed to import router {module_path}.{router_name}: {str(e)}")
         except AttributeError as e:
-            logger.warning(f"✗ Router {router_name} not found in {module_path}: {str(e)}")
+            logger.warning(f"[FAIL] Router {router_name} not found in {module_path}: {str(e)}")
         except Exception as e:
-            logger.error(f"✗ Error loading router {module_path}.{router_name}: {str(e)}")
+            logger.error(f"[FAIL] Error loading router {module_path}.{router_name}: {str(e)}")
     
     logger.info(f"Router loading complete: {loaded_count}/{len(ROUTERS)} routers loaded successfully")
     return loaded_count

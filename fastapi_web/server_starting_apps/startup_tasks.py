@@ -94,10 +94,10 @@ async def run_voice_sample_generation():
         
         # Record successful run
         set_last_run_time()
-        logger.info("✅ Voice sample generation completed")
+        logger.info("[OK] Voice sample generation completed")
         
     except Exception as e:
-        logger.error(f"❌ Voice sample generation failed: {e}")
+        logger.error(f"[ERROR] Voice sample generation failed: {e}")
 
 
 async def startup_voice_sample_check():
@@ -108,13 +108,13 @@ async def startup_voice_sample_check():
     try:
         should_run, reason = should_run_voice_sample_check()
         
-        logger.info(f"🔍 Voice sample check: {reason}")
+        logger.info(f"[CHECK] Voice sample check: {reason}")
         
         if should_run:
             # Run in background - don't block server startup
             asyncio.create_task(run_voice_sample_generation())
         else:
-            logger.info("⏭️  Skipping voice sample generation")
+            logger.info("[SKIP] Skipping voice sample generation")
             
     except Exception as e:
         logger.error(f"Error in voice sample startup check: {e}")

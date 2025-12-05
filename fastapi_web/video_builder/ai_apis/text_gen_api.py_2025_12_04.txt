@@ -1,0 +1,6 @@
+==== AI RESPONSE PARSE ERROR ====
+Datetime: 2025-12-04 13:45:12
+File: D:\dev\fastapi_web\video_builder\ai_apis\text_gen_api.py
+Line number: 325, Error: Error code: 429 - {'error': {'message': 'Rate limit exceeded: free-models-per-min. ', 'code': 429, 'metadata': {'headers': {'X-RateLimit-Limit': '16', 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': '1764845160000'}, 'provider_name': None}}, 'user_id': 'user_2zbNl6inj6fJ79FkNjQqcUNgzhC'}
+Response: Error in ai_generated_text
+

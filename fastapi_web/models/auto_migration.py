@@ -167,11 +167,48 @@ class AutoMigration:
         
         return False
     
+    def can_convert_data(self, table_name: str, field_name: str, target_type: str) -> bool:
+        """Check if existing data can be safely converted to target type"""
+        try:
+            with self.engine.connect() as conn:
+                # Check if table has any data
+                count_result = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+                count = count_result.scalar()
+                
+                if count == 0:
+                    return True  # No data, conversion is safe
+                
+                # Check if conversion would succeed on existing data
+                target_normalized = self.normalize_type(target_type)
+                test_sql = f"SELECT COUNT(*) FROM {table_name} WHERE {field_name} IS NOT NULL"
+                
+                # Try a test conversion on non-null values
+                if target_normalized in ('INTEGER', 'BIGINT', 'SMALLINT'):
+                    # For integer types, check if all values are numeric
+                    test_sql = f"SELECT COUNT(*) FROM {table_name} WHERE {field_name} IS NOT NULL AND {field_name}::text !~ '^[0-9]+$'"
+                elif target_normalized == 'BOOLEAN':
+                    # For boolean, check if values are convertible
+                    test_sql = f"SELECT COUNT(*) FROM {table_name} WHERE {field_name} IS NOT NULL AND {field_name}::text NOT IN ('true', 'false', 't', 'f', '1', '0', 'yes', 'no')"
+                
+                incompatible_result = conn.execute(text(test_sql))
+                incompatible_count = incompatible_result.scalar()
+                
+                return incompatible_count == 0
+                
+        except Exception as e:
+            logger.warning(f"[WARNING] Cannot validate data conversion for '{field_name}': {e}")
+            return False  # Safer to skip if we can't validate
+    
     def update_column_type(self, table_name: str, field_name: str, field_info: Dict[str, Any], 
                           current_db_type: str) -> bool:
         """Update column type if it has changed"""
         try:
             new_type_sql = self.normalize_type(field_info['type'])
+            
+            # Check if data can be converted safely
+            if not self.can_convert_data(table_name, field_name, new_type_sql):
+                logger.warning(f"[SKIP] Cannot convert '{field_name}' in '{table_name}' - incompatible existing data (contains non-numeric values)")
+                return False
             
             # Generate ALTER COLUMN SQL
             alter_sql = f"ALTER TABLE {table_name} ALTER COLUMN {field_name} TYPE {new_type_sql}"
@@ -184,11 +221,11 @@ class AutoMigration:
             with self.engine.connect() as conn:
                 conn.execute(text(alter_sql))
                 conn.commit()
-                logger.info(f"✅ Updated column '{field_name}' type from {current_db_type} to {new_type_sql} in table '{table_name}'")
+                logger.info(f"[OK] Updated column '{field_name}' type from {current_db_type} to {new_type_sql} in table '{table_name}'")
                 return True
                 
         except Exception as e:
-            logger.error(f"❌ Failed to update column type '{field_name}' in table '{table_name}': {e}")
+            logger.error(f"[ERROR] Failed to update column type '{field_name}' in table '{table_name}': {e}")
             return False
     
     def migrate_table(self, model_class) -> Dict[str, Any]:
@@ -257,7 +294,7 @@ class AutoMigration:
     
     def run_auto_migration(self) -> Dict[str, Any]:
         """Run automatic migration for all SQLModel classes"""
-        logger.info("🔄 Starting automatic database migration...")
+        logger.info("[PROCESSING] Starting automatic database migration...")
         
         migration_summary = {
             'total_tables': 0,
@@ -295,12 +332,12 @@ class AutoMigration:
         # Log summary
         total_changes = migration_summary['total_columns_added'] + migration_summary['total_columns_updated']
         if total_changes > 0:
-            logger.info(f"🎉 Migration completed: Added {migration_summary['total_columns_added']} columns, updated {migration_summary['total_columns_updated']} column types across {migration_summary['migrated_tables']} tables")
+            logger.info(f"[COMPLETE] Migration completed: Added {migration_summary['total_columns_added']} columns, updated {migration_summary['total_columns_updated']} column types across {migration_summary['migrated_tables']} tables")
         else:
-            logger.info("ℹ️  No migrations needed - database schema is up to date")
+            logger.info("[INFO] No migrations needed - database schema is up to date")
         
         if migration_summary['errors']:
-            logger.warning(f"⚠️  {len(migration_summary['errors'])} errors occurred during migration")
+            logger.warning(f"[WARNING] {len(migration_summary['errors'])} errors occurred during migration")
         
         return migration_summary
 

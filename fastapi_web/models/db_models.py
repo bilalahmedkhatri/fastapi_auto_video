@@ -130,6 +130,7 @@ class VideoCreationRequest(BaseModel):
 
 # Database model for storing video data
 class Video(SQLModel, table=True):
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     title: str
     description: Optional[str] = None
@@ -169,6 +170,7 @@ class Video(SQLModel, table=True):
     user_id: str  # Foreign key to frontend's user table
 
 class DownloadImages(SQLModel, table=True):
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     user_id: int
     video_id: str  # Foreign key to Video table
@@ -179,6 +181,7 @@ class DownloadImages(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.now)
 
 class SelectAIVoices(SQLModel, table=True):
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     voice_id: str = Field(unique=True)  # Unique ID for the AI voice (e.g., "am_puck", "en_female_1")
     voice_name: str  # Human-readable name (e.g., "Puck", "Sarah", "Professional Male")
@@ -199,6 +202,7 @@ class SelectAIVoices(SQLModel, table=True):
 
 class VideoVoiceSelection(SQLModel, table=True):
     """Junction table to track which voice is selected for each video"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     video_id: str  # Foreign key to Video table
     voice_id: str  # Reference to SelectAIVoices.voice_id
@@ -209,6 +213,7 @@ class VideoVoiceSelection(SQLModel, table=True):
 # Database models for media processing system
 class MediaItem(SQLModel, table=True):
     """Store uploaded media files and their analysis results"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     
     # Basic file information
@@ -248,6 +253,7 @@ class MediaItem(SQLModel, table=True):
 
 class ProcessingTask(SQLModel, table=True):
     """Track Celery processing tasks and their states"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     
     # Task identification
@@ -280,6 +286,7 @@ class ProcessingTask(SQLModel, table=True):
 
 class MediaSequence(SQLModel, table=True):
     """Store sequences of media items for video creation"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     
     # Sequence information
@@ -309,6 +316,7 @@ class MediaSequence(SQLModel, table=True):
 # New models for Script Generation and Social Media Content
 class ScriptGeneration(SQLModel, table=True):
     """Table to store generated scripts"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     user_id: str  # User who generated the script
     step_process_id: int = Field(foreign_key="videoprocessstep.id")
@@ -336,6 +344,7 @@ class ScriptGeneration(SQLModel, table=True):
 
 class SocialMediaContent(SQLModel, table=True):
     """Table to store social media optimized content for scripts"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     script_id: str = Field(foreign_key="scriptgeneration.id")
     user_id: str  # User who generated the content
@@ -354,6 +363,7 @@ class SocialMediaContent(SQLModel, table=True):
 
 class GeneratedVoiceover(SQLModel, table=True):
     """Table to store generated voiceover files and metadata"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     user_id: Optional[int] = None  # User who generated the voiceover (None for free tool)
     script_id: Optional[str] = None  # Reference to ScriptGeneration if available
@@ -390,6 +400,7 @@ class GeneratedVoiceover(SQLModel, table=True):
 
 class FreeVoiceoverUsage(SQLModel, table=True):
     """Table to track free voiceover tool usage for rate limiting"""
+    _id: Optional[int] = Field(default=None, sa_column_kwargs={"autoincrement": True}, index=True)
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     identifier: str = Field(index=True)  # IP address or session ID
     voiceover_id: str  # Reference to GeneratedVoiceover
@@ -448,7 +459,7 @@ def create_db_and_tables():
     try:
         # Step 1: Create new tables (this won't modify existing tables)
         SQLModel.metadata.create_all(engine)
-        logger.info("✅ Table creation completed")
+        logger.info("[OK] Table creation completed")
         
         # Step 2: Run auto-migration for missing columns
         from .auto_migration import run_auto_migration
@@ -456,9 +467,9 @@ def create_db_and_tables():
         
         # Log migration results
         if migration_result['total_columns_added'] > 0:
-            logger.info(f"✅ Auto-migration completed: {migration_result['total_columns_added']} columns added")
+            logger.info(f"[OK] Auto-migration completed: {migration_result['total_columns_added']} columns added")
         else:
-            logger.info("ℹ️  No schema migrations needed")
+            logger.info("[INFO] No schema migrations needed")
             
         return migration_result
         

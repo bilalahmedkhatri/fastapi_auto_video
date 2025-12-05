@@ -91,7 +91,7 @@ async def on_startup():
     # Log database connection information
     from models.database_connection import get_connection_info
     db_info = get_connection_info()
-    logger.info(f"🗄️  Database: {db_info['connection_type'].upper()} - {db_info['connection_url_masked']}")
+    logger.info(f"[DATABASE] Database: {db_info['connection_type'].upper()} - {db_info['connection_url_masked']}")
     
     logger.info(f"Application started - {loaded_count} routers loaded")
     
@@ -100,13 +100,13 @@ async def on_startup():
     await startup_voice_sample_check()
     
     # Preload Kokoro model for faster voiceover generation
-    logger.info("🔄 Warming up Kokoro voice model...")
+    logger.info("[LOADING] Warming up Kokoro voice model...")
     try:
         from kokoro_82M.model_cache import get_cached_generator
         get_cached_generator()  # Loads model into memory (~8 seconds)
-        logger.info("✅ Kokoro model ready - voiceover requests will be fast!")
+        logger.info("[OK] Kokoro model ready - voiceover requests will be fast!")
     except Exception as e:
-        logger.error(f"⚠️ Failed to preload Kokoro model: {e}")
+        logger.error(f"[WARNING] Failed to preload Kokoro model: {e}")
         logger.error("Voice generation will work but first request will be slower")
 
 

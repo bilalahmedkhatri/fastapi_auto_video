@@ -2,8 +2,14 @@ import os
 import re
 import logging
 import json
+import time
 from pprint import pprint
 from openai import OpenAI
+try:
+    from openai import RateLimitError, APIError
+except ImportError:
+    RateLimitError = Exception
+    APIError = Exception
 from dotenv import load_dotenv
 from sqlmodel import Session, select
 try:
@@ -28,6 +34,62 @@ class TextGenAPI:
             base_url="https://openrouter.ai/api/v1",
             api_key=self.apis_token,
         )
+        # Track failed models to avoid immediate retries
+        self.failed_models = {}  # {model_name: timestamp}
+        self.request_timestamps = []  # Track request times for rate limiting
+    
+    def _is_model_recently_failed(self, model_name: str, cooldown_seconds: int = 120) -> bool:
+        """Check if model failed recently and is in cooldown period."""
+        if model_name in self.failed_models:
+            failed_time = self.failed_models[model_name]
+            if time.time() - failed_time < cooldown_seconds:
+                return True
+            else:
+                # Cooldown expired, remove from failed list
+                del self.failed_models[model_name]
+        return False
+    
+    def _enforce_rate_limit(self, max_requests_per_minute: int = 50):
+        """Enforce rate limiting to stay under OpenRouter's 60 req/min limit."""
+        now = time.time()
+        
+        # Remove timestamps older than 60 seconds
+        self.request_timestamps = [ts for ts in self.request_timestamps if now - ts < 60]
+        
+        # Check if we're at the limit
+        if len(self.request_timestamps) >= max_requests_per_minute:
+            # Calculate how long to wait
+            oldest_timestamp = self.request_timestamps[0]
+            wait_time = 60 - (now - oldest_timestamp) + 0.5  # Add 500ms buffer
+            
+            if wait_time > 0:
+                logger.warning(f"Rate limit: {len(self.request_timestamps)}/{max_requests_per_minute} requests in last 60s. Waiting {wait_time:.2f}s...")
+                time.sleep(wait_time)
+                # Recursively check again after waiting
+                return self._enforce_rate_limit(max_requests_per_minute)
+        
+        # Record this request
+        self.request_timestamps.append(time.time())
+    
+    def check_openrouter_status(self) -> dict:
+        """Check current OpenRouter account status and rate limits."""
+        try:
+            import requests
+            response = requests.get(
+                "https://openrouter.ai/api/v1/auth/key",
+                headers={"Authorization": f"Bearer {self.apis_token}"}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"OpenRouter Status: Credits={data.get('data', {}).get('usage')}, Limit={data.get('data', {}).get('limit')}")
+                return data.get('data', {})
+            else:
+                logger.warning(f"Failed to check OpenRouter status: {response.status_code}")
+                return {}
+        except Exception as e:
+            logger.error(f"Error checking OpenRouter status: {e}")
+            return {}
     
     def get_available_models_info(self, limit: int = 10) -> dict:
         """
@@ -92,14 +154,15 @@ class TextGenAPI:
             return "url"
         return "text"
 
-    @staticmethod
     def get_model_for_input(
+        self,
         input_type: str, 
         response: dict = {}, 
         text_gen_failed: bool = False, 
         prefer_free: bool = True,
         min_quality_score: float = 5.0,
-        fallback_attempts: int = 0
+        fallback_attempts: int = 0,
+        exclude_models: list = None
     ) -> str:
         """
         Return the model name based on input type, quality score, and availability.
@@ -160,6 +223,13 @@ class TextGenAPI:
                 
                 # Get models based on input type preferences
                 models = session.exec(query).all()
+                
+                # Filter out excluded models and recently failed models
+                if exclude_models:
+                    models = [m for m in models if m.model_name not in exclude_models]
+                
+                # Filter out models in cooldown period
+                models = [m for m in models if not self._is_model_recently_failed(m.model_name)]
                 
                 if not models:
                     # If no models found, use hardcoded fallbacks
@@ -320,6 +390,9 @@ class TextGenAPI:
         # }}"""
         
         try:
+            # Enforce rate limiting before making request
+            self._enforce_rate_limit(max_requests_per_minute=50)
+            
             logging.info(
                 f"Sending {input_type} to openrouter.io API for content generation...")
             response = self.client.chat.completions.create(
@@ -403,10 +476,99 @@ class TextGenAPI:
                 )
                 return {"error": f"AI response could not be parsed as JSON: {str(json_err)}"}
                 
+        except RateLimitError as rate_err:
+            # Handle 429 rate limit errors specifically
+            logger.error(f"Rate limit error (429) with model {model_name}: {rate_err}")
+            
+            # Mark this model as failed to avoid immediate retry
+            self.failed_models[model_name] = time.time()
+            
+            # Extract Retry-After header if available
+            retry_after = 60  # Default to 60 seconds
+            try:
+                if hasattr(rate_err, 'response') and rate_err.response:
+                    retry_after = int(rate_err.response.headers.get('Retry-After', 60))
+            except:
+                pass
+            
+            if fallback_attempts < max_fallbacks:
+                # Use exponential backoff with Retry-After as minimum
+                backoff_delay = min(2 ** fallback_attempts, retry_after)
+                logger.warning(f"Rate limited. Waiting {backoff_delay}s before trying different model (attempt {fallback_attempts + 1}/{max_fallbacks})...")
+                time.sleep(backoff_delay)
+                
+                # Retry with a DIFFERENT model
+                return self.ai_generated_text(
+                    user_message=user_message,
+                    voiceover_language=voiceover_language,
+                    platforms=platforms,
+                    category=category,
+                    text_gen_failed=True,
+                    user=user,
+                    fallback_attempts=fallback_attempts + 1,
+                    max_fallbacks=max_fallbacks
+                )
+            else:
+                # Use ErrorLogger for rate limit errors
+                import sys
+                error_line = sys.exc_info()[-1].tb_lineno if sys.exc_info()[-1] else 0
+                ErrorLogger.log_ai_response_error(
+                    error=rate_err,
+                    response=f"Rate limit exceeded after {fallback_attempts + 1} attempts",
+                    user=user,
+                    error_line=error_line,
+                    file_name=__file__,
+                    log_dir="logs"
+                )
+                return {"error": f"Rate limit exceeded. Please wait {retry_after}s and try again. All {max_fallbacks + 1} attempts failed."}
+                
+        except APIError as api_err:
+            # Handle other OpenRouter API errors (500, 503, etc.)
+            logger.error(f"API error with model {model_name}: {api_err}")
+            
+            # Mark model as failed
+            self.failed_models[model_name] = time.time()
+            
+            if fallback_attempts < max_fallbacks:
+                # Shorter delay for API errors (not rate limits)
+                backoff_delay = 2 ** fallback_attempts
+                logger.warning(f"API error. Waiting {backoff_delay}s before trying different model (attempt {fallback_attempts + 1}/{max_fallbacks})...")
+                time.sleep(backoff_delay)
+                
+                return self.ai_generated_text(
+                    user_message=user_message,
+                    voiceover_language=voiceover_language,
+                    platforms=platforms,
+                    category=category,
+                    text_gen_failed=True,
+                    user=user,
+                    fallback_attempts=fallback_attempts + 1,
+                    max_fallbacks=max_fallbacks
+                )
+            else:
+                import sys
+                error_line = sys.exc_info()[-1].tb_lineno if sys.exc_info()[-1] else 0
+                ErrorLogger.log_ai_response_error(
+                    error=api_err,
+                    response="API error after multiple attempts",
+                    user=user,
+                    error_line=error_line,
+                    file_name=__file__,
+                    log_dir="logs"
+                )
+                return {"error": f"API error: {str(api_err)}"}
+                
         except Exception as e:
+            # Handle other exceptions (network errors, timeouts, etc.)
+            logger.error(f"General error with model {model_name}: {e}")
+            
             # Check if we can try a fallback model
             if fallback_attempts < max_fallbacks:
-                logging.warning(f"Model {model_name} failed (attempt {fallback_attempts + 1}), trying fallback...")
+                # Exponential backoff for general errors
+                backoff_delay = 2 ** fallback_attempts
+                logging.warning(f"Model {model_name} failed (attempt {fallback_attempts + 1}/{max_fallbacks}). Waiting {backoff_delay}s before trying fallback...")
+                time.sleep(backoff_delay)
+                
                 return self.ai_generated_text(
                     user_message=user_message,
                     voiceover_language=voiceover_language,
@@ -479,6 +641,9 @@ class TextGenAPI:
         """
 
         try:
+            # Enforce rate limiting
+            self._enforce_rate_limit(max_requests_per_minute=50)
+            
             logging.info("Sending prompt to AI API for keyword generation...")
             response = self.client.chat.completions.create(
                 model=model_name,
@@ -534,6 +699,9 @@ class TextGenAPI:
             "Respond with: {\"id\": \"...\", \"title\": \"...\"}"
         )
         try:
+            # Enforce rate limiting
+            self._enforce_rate_limit(max_requests_per_minute=50)
+            
             logging.info("Sending prompt to AI API...")
             response = self.client.chat.completions.create(
                 model=model_name,
@@ -562,6 +730,9 @@ class TextGenAPI:
     def generate_search_query(self, description: str) -> str:
         """Generate search query with no retry mechanism. Returns empty string on failure."""
         try:
+            # Enforce rate limiting
+            self._enforce_rate_limit(max_requests_per_minute=50)
+            
             model_name = self.get_model_for_input("text", prefer_free=True, min_quality_score=2.0)
             logging.info("Sending prompt to AI API...")
             response = self.client.chat.completions.create(
@@ -594,6 +765,9 @@ class TextGenAPI:
             Dictionary with social media content or empty dict on failure
         """
         try:
+            # Enforce rate limiting
+            self._enforce_rate_limit(max_requests_per_minute=50)
+            
             model_name = self.get_model_for_input("text", prefer_free=True, min_quality_score=4.0)
             logging.info("Generating social media content with AI...")
             response = self.client.chat.completions.create(

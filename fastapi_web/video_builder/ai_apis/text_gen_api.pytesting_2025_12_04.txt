@@ -1,0 +1,6 @@
+==== AI RESPONSE PARSE ERROR ====
+Datetime: 2025-12-04 20:59:48
+File: D:\dev\fastapi_web\video_builder\ai_apis\text_gen_api.pytesting
+Line number: 0, Error: None
+Response: { "title": "AI News Flash: AGI Breakthroughs & Ethical Debates!", "description": "Stay updated on the latest AI and AGI news! This video covers recent breakthroughs in artificial general intelligence, explores the ethical considerations surrounding rapid AI development, and highlights key updates you need to know. Discover the potential impact of these advancements on our future. Subscribe for more AI news!", "voiceover_script": "Hey everyone, quick AI update! AGI's making waves with [mention a recent breakthrough, e.g., new AI model surpassing benchmarks]. But it's not all sunshine. Concerns are rising about [mention an ethical concern, e.g., job displacement or AI bias]. Experts are debating [mention a specific debate, e.g., AI regulation or AI safety protocols]. What do you think? Let me know in the comments! Stay tuned for more AI news!", "Category": { "28": "Science & Technology" }, "tags": [ "AI", "Artificial Intelligence", "AGI", "Artificial General Intelligence", "AI News", "Tech News", "AI Ethics", "AI Safety", "Machine Learning", "Future of AI", "AI Development", "Technology" ], "language": "English" }
+

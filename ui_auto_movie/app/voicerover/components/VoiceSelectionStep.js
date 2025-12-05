@@ -557,7 +557,9 @@ const VoiceSelectionStep = ({ scriptData, onNext, onBack, userId }) => {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.src = `http://localhost:8000${generatedAudio.audio_url}`;
+        console.log('Playing generated audio from URL:', generatedAudio.audio_url);
+        // audioRef.current.src = `http://localhost:8000${generatedAudio.audio_url}`;
+        audioRef.current.src = generatedAudio.audio_url;
         audioRef.current.play();
         setIsPlaying(true);
       }
